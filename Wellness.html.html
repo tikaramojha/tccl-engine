@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Human Coherence OS — TCCL Bio Engine</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap');
+
+:root {
+  --void:#080810;--deep:#0f0f1a;--surface:#161622;--panel:#1c1c2a;
+  --edge:rgba(255,255,255,0.07);--text:#e8e8f4;--muted:#7878a0;
+  --life:#4de89a;--pulse:#f07848;--mind:#a090ff;--calm:#50c8e8;
+  --warn:#f0c840;--danger:#e85858;--earth:#8fbc6f;--water:#60b8f0;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--void);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;
+  background:radial-gradient(ellipse 70% 50% at 15% 25%,rgba(77,232,154,.04) 0%,transparent 60%),
+  radial-gradient(ellipse 50% 60% at 85% 75%,rgba(160,144,255,.05) 0%,transparent 60%);
+  pointer-events:none;z-index:0;}
+.wrap{position:relative;z-index:1;max-width:1500px;margin:0 auto;padding:18px;}
+
+/* TABS */
+.tabs{display:flex;gap:3px;border-bottom:1px solid var(--edge);margin-bottom:20px;flex-wrap:wrap;padding-bottom:0;}
+.tab{padding:10px 18px;background:transparent;border:1px solid transparent;border-bottom:none;
+  color:var(--muted);cursor:pointer;font-family:'DM Mono',monospace;font-size:10px;font-weight:500;
+  letter-spacing:2px;text-transform:uppercase;transition:all .2s;border-radius:6px 6px 0 0;}
+.tab:hover{color:var(--text);}
+.tab.act{color:var(--life);background:rgba(77,232,154,.05);border-color:rgba(77,232,154,.2);border-bottom-color:var(--void);}
+.pnl{display:none;}.pnl.act{display:block;}
+
+/* HEADER */
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:20px 0 22px;
+  border-bottom:1px solid var(--edge);margin-bottom:24px;flex-wrap:wrap;gap:14px;}
+.logo{font-family:'DM Serif Display',serif;font-size:clamp(20px,3vw,32px);color:var(--text);}
+.logo em{color:var(--life);font-style:italic;}
+.logo-sub{font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:3px;margin-top:4px;}
+.score-ring{display:flex;align-items:center;gap:16px;}
+.ring-wrap{position:relative;width:90px;height:90px;}
+.ring-wrap svg{transform:rotate(-90deg);}
+.ring-bg{fill:none;stroke:rgba(255,255,255,.05);stroke-width:7;}
+.ring-fill{fill:none;stroke-width:7;stroke-linecap:round;transition:stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1),stroke .4s;}
+.ring-inner{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.ri-score{font-family:'DM Mono',monospace;font-size:20px;font-weight:500;transition:color .4s;}
+.ri-label{font-family:'DM Mono',monospace;font-size:7px;color:var(--muted);letter-spacing:2px;}
+.score-info{}
+.si-lbl{font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);letter-spacing:2px;margin-bottom:3px;}
+.si-state{font-family:'DM Serif Display',serif;font-size:24px;line-height:1;transition:color .4s;}
+.si-sub{font-size:11px;color:var(--muted);margin-top:3px;}
+.hdr-time{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);text-align:right;}
+.hdr-time strong{color:var(--text);display:block;font-size:14px;}
+
+/* CARDS & PANELS */
+.card{background:var(--surface);border:1px solid var(--edge);border-radius:16px;padding:20px;margin-bottom:16px;}
+.card-title{font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:3px;
+  text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.card-title::before{content:'';width:20px;height:1px;background:var(--edge);}
+
+/* GRIDS */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.g5{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}
+@media(max-width:1000px){.g4,.g5{grid-template-columns:repeat(3,1fr);}.g3{grid-template-columns:1fr 1fr;}}
+@media(max-width:700px){.g2,.g3,.g4,.g5{grid-template-columns:1fr 1fr;}}
+@media(max-width:440px){.g2,.g3,.g4,.g5{grid-template-columns:1fr;}}
+
+/* INPUTS */
+label.lbl{display:block;font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);
+  letter-spacing:2px;text-transform:uppercase;margin-bottom:5px;}
+.inp{width:100%;background:var(--panel);border:1px solid var(--edge);border-radius:8px;
+  padding:10px 14px;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;outline:none;
+  transition:border-color .2s;}
+.inp:focus{border-color:rgba(77,232,154,.4);}
+.inp::placeholder{color:rgba(120,120,160,.4);}
+select.inp option{background:var(--panel);}
+.ig{margin-bottom:14px;}
+
+/* SLIDER */
+.sl-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.sl-icon{font-size:18px;width:26px;text-align:center;flex-shrink:0;}
+.sl-body{flex:1;}
+.sl-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;}
+.sl-name{font-size:12px;color:var(--text);}
+.sl-val{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);}
+input[type=range]{width:100%;appearance:none;height:3px;border-radius:2px;
+  background:rgba(255,255,255,.08);outline:none;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{appearance:none;width:14px;height:14px;border-radius:50%;
+  background:var(--text);border:2.5px solid var(--surface);transition:transform .15s;}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.3);}
+
+/* FOOD TAGS */
+.food-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;}
+.food-tag{padding:6px 14px;border-radius:20px;border:1px solid var(--edge);
+  font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;transition:all .2s;color:var(--muted);}
+.food-tag:hover{border-color:rgba(255,255,255,.2);color:var(--text);}
+.food-tag.sel{border-color:var(--life);color:var(--life);background:rgba(77,232,154,.08);}
+
+/* TOGGLE CHIPS */
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
+.chip{padding:6px 16px;border-radius:20px;border:1px solid var(--edge);
+  font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;transition:all .2s;color:var(--muted);}
+.chip:hover{border-color:rgba(255,255,255,.18);color:var(--text);}
+.chip.sel{background:rgba(77,232,154,.1);border-color:rgba(77,232,154,.4);color:var(--life);}
+
+/* METRIC BOXES */
+.mbox{background:var(--panel);border:1px solid var(--edge);border-radius:10px;padding:14px;text-align:center;}
+.mb-lbl{font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);letter-spacing:2px;margin-bottom:6px;}
+.mb-val{font-family:'DM Serif Display',serif;font-size:22px;line-height:1;margin-bottom:3px;}
+.mb-sub{font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);}
+
+/* TCCL AXIS */
+.axis-wrap{position:relative;height:110px;margin:8px 0 20px;}
+.axis-line{position:absolute;top:50%;left:0;right:0;transform:translateY(-50%);
+  height:2px;background:var(--edge);border-radius:2px;}
+.axis-safe{position:absolute;top:50%;transform:translateY(-50%);
+  left:33%;width:34%;height:36px;background:rgba(77,232,154,.06);
+  border:1px solid rgba(77,232,154,.12);border-radius:4px;}
+.axis-dot{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:10px;height:10px;border-radius:50%;background:var(--muted);border:2px solid var(--surface);}
+.axis-pin{position:absolute;top:50%;transform:translate(-50%,-50%);
+  width:20px;height:20px;border-radius:50%;border:2.5px solid;background:var(--surface);
+  display:flex;align-items:center;justify-content:center;font-size:9px;
+  transition:left 1.2s cubic-bezier(.4,0,.2,1);z-index:2;}
+.axis-lbl{position:absolute;bottom:4px;font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);}
+
+/* SIGNAL */
+.sig-box{border-radius:12px;padding:16px;border:1px solid;margin-bottom:16px;transition:all .4s;}
+.sig-hdr{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:3px;opacity:.6;margin-bottom:6px;}
+.sig-main{font-family:'DM Serif Display',serif;font-size:30px;line-height:1;margin-bottom:5px;}
+.sig-desc{font-size:13px;line-height:1.7;opacity:.85;}
+
+/* PROTOCOL */
+.proto-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+.proto{background:var(--panel);border:1px solid var(--edge);border-radius:12px;padding:14px;transition:all .2s;}
+.proto:hover{border-color:rgba(255,255,255,.14);}
+.proto-icon{font-size:22px;margin-bottom:8px;}
+.proto-cat{font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);letter-spacing:2px;margin-bottom:3px;}
+.proto-action{font-size:13px;font-weight:700;color:var(--text);margin-bottom:5px;}
+.proto-detail{font-size:11px;color:var(--muted);line-height:1.7;}
+.proto-urgency{display:inline-block;margin-top:6px;padding:2px 8px;border-radius:3px;
+  font-family:'DM Mono',monospace;font-size:8px;letter-spacing:1px;}
+
+/* REPORT */
+.report{font-size:14px;line-height:1.9;}
+.report h3{font-family:'DM Serif Display',serif;font-size:19px;margin-bottom:12px;line-height:1.4;}
+.report p{margin-bottom:12px;}
+.hl{padding:10px 14px;border-left:2px solid;border-radius:0 8px 8px 0;
+  background:rgba(255,255,255,.03);margin:14px 0;font-size:13px;line-height:1.7;}
+.report-footer{font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);
+  border-top:1px solid var(--edge);padding-top:10px;margin-top:14px;
+  display:flex;gap:12px;flex-wrap:wrap;}
+
+/* VITALS ROW */
+.vitals-strip{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:20px;}
+@media(max-width:900px){.vitals-strip{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:500px){.vitals-strip{grid-template-columns:repeat(2,1fr);}}
+.vs-card{background:var(--surface);border:1px solid var(--edge);border-radius:12px;padding:12px;
+  border-top:2px solid;}
+.vs-icon{font-size:16px;margin-bottom:5px;}
+.vs-name{font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);letter-spacing:1px;margin-bottom:4px;}
+.vs-val{font-family:'DM Serif Display',serif;font-size:20px;line-height:1;}
+.vs-dev{font-family:'DM Mono',monospace;font-size:9px;margin-top:4px;
+  padding:2px 7px;border-radius:3px;display:inline-block;}
+
+/* BODY COMPOSITION */
+.body-comp{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.bmi-gauge{background:var(--panel);border:1px solid var(--edge);border-radius:12px;padding:14px;}
+.bmi-bar{height:8px;border-radius:4px;background:linear-gradient(90deg,
+  var(--calm) 0%,var(--life) 25%,var(--warn) 50%,var(--pulse) 75%,var(--danger) 100%);
+  margin:10px 0;position:relative;}
+.bmi-pin{position:absolute;top:-4px;width:16px;height:16px;border-radius:50%;
+  background:var(--text);border:2px solid var(--surface);transform:translateX(-50%);
+  transition:left 1s cubic-bezier(.4,0,.2,1);}
+
+/* ANALYZE BTN */
+.analyze-btn{width:100%;padding:15px;background:linear-gradient(135deg,rgba(77,232,154,.14),rgba(80,200,232,.1));
+  border:1px solid rgba(77,232,154,.3);border-radius:10px;color:var(--life);
+  font-family:'DM Mono',monospace;font-size:11px;font-weight:500;letter-spacing:2px;
+  text-transform:uppercase;cursor:pointer;transition:all .2s;margin-top:6px;}
+.analyze-btn:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(77,232,154,.1);}
+
+canvas{display:block;width:100%;border-radius:8px;}
+
+/* SECTION DIVIDER */
+.section-div{font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:3px;
+  text-transform:uppercase;margin:20px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--edge);
+  display:flex;align-items:center;gap:8px;}
+.section-div::after{content:'';flex:1;height:1px;background:var(--edge);}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.card{animation:fadeUp .4s ease both;}
+@keyframes pulse{0%,100%{opacity:.7}50%{opacity:1}}
+.rdot{width:6px;height:6px;border-radius:50%;display:inline-block;animation:pulse 2s ease infinite;margin-right:5px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- HEADER -->
+<div class="hdr">
+  <div>
+    <div class="logo">Human <em>Coherence</em> OS</div>
+    <div class="logo-sub">TCCL Bio Engine · Full Spectrum Analysis · by tikaramojha</div>
+  </div>
+  <div class="score-ring">
+    <div class="ring-wrap">
+      <svg viewBox="0 0 90 90" width="90" height="90">
+        <circle class="ring-bg" cx="45" cy="45" r="37"/>
+        <circle class="ring-fill" id="ring-fill" cx="45" cy="45" r="37"
+          stroke="var(--life)" stroke-dasharray="232" stroke-dashoffset="232"/>
+      </svg>
+      <div class="ring-inner">
+        <div class="ri-score" id="ri-score" style="color:var(--life)">—</div>
+        <div class="ri-label">COHERENCE</div>
+      </div>
+    </div>
+    <div class="score-info">
+      <div class="si-lbl">Human State</div>
+      <div class="si-state" id="si-state" style="color:var(--muted)">—</div>
+      <div class="si-sub" id="si-sub">Enter vitals below</div>
+    </div>
+  </div>
+  <div class="hdr-time">
+    <strong id="htime">—</strong>
+    <span id="hdate">—</span>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab act" onclick="swTab('input',this)">📥 Input</button>
+  <button class="tab" onclick="swTab('analysis',this)">🔬 Analysis</button>
+  <button class="tab" onclick="swTab('report',this)">📰 Report</button>
+  <button class="tab" onclick="swTab('protocols',this)">💊 Protocols</button>
+  <button class="tab" onclick="swTab('history',this)">📈 History</button>
+</div>
+
+<!-- ══ INPUT PANEL ══ -->
+<div id="pnl-input" class="pnl act">
+  <div class="g2">
+
+    <!-- LEFT: Physical Profile -->
+    <div>
+      <div class="section-div">Physical Profile</div>
+      <div class="card">
+        <div class="card-title">Body Measurements</div>
+        <div class="g2">
+          <div class="ig">
+            <label class="lbl">Age (years)</label>
+            <input class="inp" id="i-age" type="number" placeholder="25" value="25" min="1" max="120" oninput="liveCompute()">
+          </div>
+          <div class="ig">
+            <label class="lbl">Biological Sex</label>
+            <select class="inp" id="i-sex" onchange="liveCompute()">
+              <option value="M">Male</option>
+              <option value="F">Female</option>
+              <option value="O">Other/Prefer not</option>
+            </select>
+          </div>
+          <div class="ig">
+            <label class="lbl">Height (cm)</label>
+            <input class="inp" id="i-height" type="number" placeholder="170" value="170" min="50" max="250" oninput="liveCompute()">
+          </div>
+          <div class="ig">
+            <label class="lbl">Current Weight (kg)</label>
+            <input class="inp" id="i-weight" type="number" placeholder="70" value="70" min="10" max="500" oninput="liveCompute()">
+          </div>
+          <div class="ig">
+            <label class="lbl">Waist Circumference (cm)</label>
+            <input class="inp" id="i-waist" type="number" placeholder="80" value="80" min="40" max="200" oninput="liveCompute()">
+          </div>
+          <div class="ig">
+            <label class="lbl">Resting Heart Rate (bpm)</label>
+            <input class="inp" id="i-hr" type="number" placeholder="70" value="70" min="30" max="200" oninput="liveCompute()">
+          </div>
+        </div>
+      </div>
+
+      <div class="section-div">Environment</div>
+      <div class="card">
+        <div class="card-title">Environment & Location</div>
+        <div class="g2">
+          <div class="ig">
+            <label class="lbl">Location Type</label>
+            <select class="inp" id="i-location" onchange="liveCompute()">
+              <option value="mountain">Mountain / High Altitude</option>
+              <option value="city" selected>Urban City</option>
+              <option value="suburb">Suburb / Town</option>
+              <option value="rural">Rural / Village</option>
+              <option value="coastal">Coastal</option>
+              <option value="desert">Desert / Arid</option>
+            </select>
+          </div>
+          <div class="ig">
+            <label class="lbl">Climate</label>
+            <select class="inp" id="i-climate" onchange="liveCompute()">
+              <option value="tropical">Tropical / Hot-Humid</option>
+              <option value="subtropical">Subtropical</option>
+              <option value="temperate" selected>Temperate</option>
+              <option value="continental">Continental</option>
+              <option value="cold">Cold / Nordic</option>
+              <option value="arid">Arid / Dry</option>
+            </select>
+          </div>
+          <div class="ig">
+            <label class="lbl">Air Quality (AQI approx)</label>
+            <select class="inp" id="i-aqi" onchange="liveCompute()">
+              <option value="good">Good (0-50)</option>
+              <option value="moderate" selected>Moderate (51-100)</option>
+              <option value="unhealthy">Unhealthy (101-150)</option>
+              <option value="very_unhealthy">Very Unhealthy (151+)</option>
+            </select>
+          </div>
+          <div class="ig">
+            <label class="lbl">Noise Level</label>
+            <select class="inp" id="i-noise" onchange="liveCompute()">
+              <option value="quiet">Quiet (nature/rural)</option>
+              <option value="moderate" selected>Moderate (suburb)</option>
+              <option value="loud">Loud (busy city)</option>
+              <option value="very_loud">Very Loud (industrial)</option>
+            </select>
+          </div>
+          <div class="ig">
+            <label class="lbl">Sunlight Exposure Today</label>
+            <select class="inp" id="i-sun" onchange="liveCompute()">
+              <option value="none">None (indoor all day)</option>
+              <option value="low">Low (< 15 min)</option>
+              <option value="moderate" selected>Moderate (15–60 min)</option>
+              <option value="good">Good (1–3 hrs)</option>
+              <option value="high">High (3+ hrs)</option>
+            </select>
+          </div>
+          <div class="ig">
+            <label class="lbl">Living Situation</label>
+            <select class="inp" id="i-living" onchange="liveCompute()">
+              <option value="alone">Living Alone</option>
+              <option value="partner">With Partner</option>
+              <option value="family" selected>With Family</option>
+              <option value="shared">Shared Housing</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Lifestyle -->
+    <div>
+      <div class="section-div">Daily Vitals</div>
+      <div class="card">
+        <div class="card-title">Today's Readings</div>
+        <div class="sl-row">
+          <div class="sl-icon">🌙</div>
+          <div class="sl-body">
+            <div class="sl-top"><span class="sl-name">Sleep Hours</span><span class="sl-val" id="sv-sleep">7.0h</span></div>
+            <input type="range" id="sl-sleep" min="0" max="12" step="0.5" value="7" oninput="document.getElementById('sv-sleep').textContent=this.value+'h';liveCompute()">
+          </div>
+        </div>
+        <div class="sl-row">
+          <div class="sl-icon">🔥</div>
+          <div class="sl-body">
+            <div class="sl-top"><span class="sl-name">Stress Level</span><span class="sl-val" id="sv-stress">5</span></div>
+            <input type="range" id="sl-stress" min="0" max="10" step="0.5" value="5" oninput="document.getElementById('sv-stress').textContent=this.value;liveCompute()">
+          </div>
+        </div>
+        <div class="sl-row">
+          <div class="sl-icon">⚡</div>
+          <div class="sl-body">
+            <div class="sl-top"><span class="sl-name">Energy Level</span><span class="sl-val" id="sv-energy">6</span></div>
+            <input type="range" id="sl-energy" min="0" max="10" step="0.5" value="6" oninput="document.getElementById('sv-energy').textContent=this.value;liveCompute()">
+          </div>
+        </div>
+        <div class="sl-row">
+          <div class="sl-icon">🧠</div>
+          <div class="sl-body">
+            <div class="sl-top"><span class="sl-name">Mental Focus</span><span class="sl-val" id="sv-focus">6</span></div>
+            <input type="range" id="sl-focus" min="0" max="10" step="0.5" value="6" oninput="document.getElementById('sv-focus').textContent=this.value;liveCompute()">
+          </div>
+        </div>
+        <div class="sl-row">
+          <div class="sl-icon">😌</div>
+          <div class="sl-body">
+            <div class="sl-top"><span class="sl-name">Mood / Emotional State</span><span class="sl-val" id="sv-mood">6</span></div>
+            <input type="range" id="sl-mood" min="0" max="10" step="0.5" value="6" oninput="document.getElementById('sv-mood').textContent=this.value;liveCompute()">
+          </div>
+        </div>
+        <div class="sl-row">
+          <div class="sl-icon">💧</div>
+          <div class="sl-body">
+            <div class="sl-top"><span class="sl-name">Water Intake (glasses)</span><span class="sl-val" id="sv-water">6</span></div>
+            <input type="range" id="sl-water" min="0" max="15" step="1" value="6" oninput="document.getElementById('sv-water').textContent=this.value;liveCompute()">
+          </div>
+        </div>
+        <div class="sl-row">
+          <div class="sl-icon">🏃</div>
+          <div class="sl-body">
+            <div class="sl-top"><span class="sl-name">Exercise (minutes)</span><span class="sl-val" id="sv-ex">0m</span></div>
+            <input type="range" id="sl-ex" min="0" max="180" step="5" value="0" oninput="document.getElementById('sv-ex').textContent=this.value+'m';liveCompute()">
+          </div>
+        </div>
+      </div>
+
+      <div class="section-div">Nutrition & Diet</div>
+      <div class="card">
+        <div class="card-title">Food Profile</div>
+        <div class="ig">
+          <label class="lbl">Primary Diet Type</label>
+          <select class="inp" id="i-diet" onchange="liveCompute()">
+            <option value="omnivore" selected>Omnivore (meat + plants)</option>
+            <option value="vegetarian">Vegetarian</option>
+            <option value="vegan">Vegan</option>
+            <option value="keto">Ketogenic / Low-carb</option>
+            <option value="mediterranean">Mediterranean</option>
+            <option value="paleo">Paleo</option>
+            <option value="intermittent">Intermittent Fasting</option>
+            <option value="junk">Mostly Processed / Junk</option>
+          </select>
+        </div>
+        <div class="ig">
+          <label class="lbl">Meals Per Day</label>
+          <select class="inp" id="i-meals" onchange="liveCompute()">
+            <option value="1">1 meal</option>
+            <option value="2">2 meals</option>
+            <option value="3" selected>3 meals</option>
+            <option value="4">4+ meals</option>
+          </select>
+        </div>
+        <div class="ig">
+          <label class="lbl">What did you eat today? (select all that apply)</label>
+          <div class="food-grid" id="food-grid">
+            <div class="food-tag" onclick="toggleFood(this,'vegetables')">🥬 Vegetables</div>
+            <div class="food-tag sel" onclick="toggleFood(this,'fruits')">🍎 Fruits</div>
+            <div class="food-tag" onclick="toggleFood(this,'grains')">🌾 Whole Grains</div>
+            <div class="food-tag" onclick="toggleFood(this,'protein')">🥩 Lean Protein</div>
+            <div class="food-tag" onclick="toggleFood(this,'dairy')">🥛 Dairy</div>
+            <div class="food-tag" onclick="toggleFood(this,'legumes')">🫘 Legumes</div>
+            <div class="food-tag" onclick="toggleFood(this,'nuts')">🥜 Nuts/Seeds</div>
+            <div class="food-tag" onclick="toggleFood(this,'fish')">🐟 Fish</div>
+            <div class="food-tag" onclick="toggleFood(this,'eggs')">🥚 Eggs</div>
+            <div class="food-tag" onclick="toggleFood(this,'processed')">🍔 Processed Food</div>
+            <div class="food-tag" onclick="toggleFood(this,'sugar')">🍭 Added Sugar</div>
+            <div class="food-tag" onclick="toggleFood(this,'alcohol')">🍺 Alcohol</div>
+            <div class="food-tag" onclick="toggleFood(this,'coffee')">☕ Coffee/Tea</div>
+            <div class="food-tag" onclick="toggleFood(this,'fastfood')">🍟 Fast Food</div>
+            <div class="food-tag" onclick="toggleFood(this,'dal')">🍛 Dal/Lentils</div>
+          </div>
+        </div>
+        <div class="ig">
+          <label class="lbl">Eating Habit</label>
+          <div class="chips" id="eating-habit">
+            <div class="chip sel" onclick="toggleChip(this,'eating-habit')">Regular timing</div>
+            <div class="chip" onclick="toggleChip(this,'eating-habit')">Irregular</div>
+            <div class="chip" onclick="toggleChip(this,'eating-habit')">Emotional eating</div>
+            <div class="chip" onclick="toggleChip(this,'eating-habit')">Mindful eating</div>
+          </div>
+        </div>
+
+        <div class="section-div">Lifestyle Factors</div>
+        <div class="ig">
+          <label class="lbl">Work Type</label>
+          <div class="chips" id="work-type">
+            <div class="chip sel" onclick="toggleChip(this,'work-type')">Desk / Sedentary</div>
+            <div class="chip" onclick="toggleChip(this,'work-type')">Light activity</div>
+            <div class="chip" onclick="toggleChip(this,'work-type')">Moderate physical</div>
+            <div class="chip" onclick="toggleChip(this,'work-type')">Heavy physical</div>
+          </div>
+        </div>
+        <div class="ig">
+          <label class="lbl">Screen Time today</label>
+          <div class="chips" id="screen-time">
+            <div class="chip" onclick="toggleChip(this,'screen-time')">&lt;2h</div>
+            <div class="chip sel" onclick="toggleChip(this,'screen-time')">2–6h</div>
+            <div class="chip" onclick="toggleChip(this,'screen-time')">6–10h</div>
+            <div class="chip" onclick="toggleChip(this,'screen-time')">10h+</div>
+          </div>
+        </div>
+        <div class="ig">
+          <label class="lbl">Social Connection today</label>
+          <div class="chips" id="social">
+            <div class="chip" onclick="toggleChip(this,'social')">Isolated</div>
+            <div class="chip sel" onclick="toggleChip(this,'social')">Some interaction</div>
+            <div class="chip" onclick="toggleChip(this,'social')">Good social day</div>
+            <div class="chip" onclick="toggleChip(this,'social')">Very social</div>
+          </div>
+        </div>
+
+        <button class="analyze-btn" onclick="runFullAnalysis()">
+          ⚡ &nbsp; RUN FULL BIO-COHERENCE ANALYSIS
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ANALYSIS PANEL ══ -->
+<div id="pnl-analysis" class="pnl">
+
+  <!-- Vitals Strip -->
+  <div class="vitals-strip" id="vitals-strip">
+    <div class="vs-card" style="border-top-color:var(--calm)">
+      <div class="vs-icon">🌙</div><div class="vs-name">SLEEP</div>
+      <div class="vs-val" id="vs-sleep" style="color:var(--calm)">—</div>
+      <div class="vs-dev" id="vd-sleep">—</div>
+    </div>
+    <div class="vs-card" style="border-top-color:var(--pulse)">
+      <div class="vs-icon">🔥</div><div class="vs-name">STRESS</div>
+      <div class="vs-val" id="vs-stress" style="color:var(--pulse)">—</div>
+      <div class="vs-dev" id="vd-stress">—</div>
+    </div>
+    <div class="vs-card" style="border-top-color:var(--life)">
+      <div class="vs-icon">⚡</div><div class="vs-name">ENERGY</div>
+      <div class="vs-val" id="vs-energy" style="color:var(--life)">—</div>
+      <div class="vs-dev" id="vd-energy">—</div>
+    </div>
+    <div class="vs-card" style="border-top-color:var(--mind)">
+      <div class="vs-icon">🧠</div><div class="vs-name">FOCUS</div>
+      <div class="vs-val" id="vs-focus" style="color:var(--mind)">—</div>
+      <div class="vs-dev" id="vd-focus">—</div>
+    </div>
+    <div class="vs-card" style="border-top-color:var(--warn)">
+      <div class="vs-icon">🥗</div><div class="vs-name">NUTRITION</div>
+      <div class="vs-val" id="vs-nutrition" style="color:var(--warn)">—</div>
+      <div class="vs-dev" id="vd-nutrition">—</div>
+    </div>
+    <div class="vs-card" style="border-top-color:var(--earth)">
+      <div class="vs-icon">🌿</div><div class="vs-name">ENVIRONMENT</div>
+      <div class="vs-val" id="vs-env" style="color:var(--earth)">—</div>
+      <div class="vs-dev" id="vd-env">—</div>
+    </div>
+  </div>
+
+  <div class="g2">
+    <!-- TCCL Engine -->
+    <div class="card">
+      <div class="card-title">TCCL Coherence Axis — Human Bio</div>
+      <div class="axis-wrap">
+        <div class="axis-line"></div>
+        <div class="axis-safe"></div>
+        <div class="axis-dot"></div>
+        <div class="axis-pin" id="axis-pin" style="left:50%;border-color:var(--muted);color:var(--muted);">●</div>
+        <div class="axis-lbl" style="left:2%">CRITICAL</div>
+        <div class="axis-lbl" style="left:38%">COHERENT ZONE</div>
+        <div class="axis-lbl" style="right:2%">OVERLOAD</div>
+      </div>
+      <div class="g3">
+        <div class="mbox"><div class="mb-lbl">Coherence Axis</div>
+          <div class="mb-val" id="mb-ca" style="color:var(--life)">—</div>
+          <div class="mb-sub">Equilibrium</div></div>
+        <div class="mbox"><div class="mb-lbl">Deviation D%</div>
+          <div class="mb-val" id="mb-dev" style="color:var(--warn)">—</div>
+          <div class="mb-sub">From ideal</div></div>
+        <div class="mbox"><div class="mb-lbl">Phase Dir PD</div>
+          <div class="mb-val" id="mb-pd" style="color:var(--calm)">—</div>
+          <div class="mb-sub">Momentum</div></div>
+      </div>
+      <!-- Signal -->
+      <div class="sig-box" id="sig-box" style="background:rgba(120,120,160,.07);border-color:rgba(120,120,160,.2);color:var(--muted);margin-top:14px;">
+        <div class="sig-hdr">TCCL WELLNESS SIGNAL</div>
+        <div class="sig-main" id="sig-main">Awaiting analysis</div>
+        <div class="sig-desc" id="sig-desc">Run analysis to see your signal</div>
+      </div>
+    </div>
+
+    <!-- Body Composition -->
+    <div class="card">
+      <div class="card-title">Body Composition Analysis</div>
+      <div class="body-comp">
+        <div class="bmi-gauge">
+          <div class="mb-lbl">BMI</div>
+          <div class="mb-val" id="bmi-val" style="font-size:28px;">—</div>
+          <div class="bmi-bar"><div class="bmi-pin" id="bmi-pin" style="left:50%"></div></div>
+          <div style="display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);">
+            <span>Under</span><span>Normal</span><span>Over</span><span>Obese</span>
+          </div>
+          <div class="mb-sub" id="bmi-cat" style="margin-top:8px;">—</div>
+        </div>
+        <div>
+          <div class="mbox" style="margin-bottom:10px;">
+            <div class="mb-lbl">Ideal Weight Range</div>
+            <div class="mb-val" id="ideal-wt" style="font-size:16px;">—</div>
+            <div class="mb-sub" id="ideal-wt-sub">Based on height</div>
+          </div>
+          <div class="mbox" style="margin-bottom:10px;">
+            <div class="mb-lbl">Waist-Height Ratio</div>
+            <div class="mb-val" id="whr-val" style="font-size:16px;">—</div>
+            <div class="mb-sub" id="whr-cat">—</div>
+          </div>
+          <div class="mbox">
+            <div class="mb-lbl">Est. Daily Calories (TDEE)</div>
+            <div class="mb-val" id="tdee-val" style="font-size:16px;color:var(--warn)">—</div>
+            <div class="mb-sub">Total Daily Energy Expenditure</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Environmental Impact -->
+  <div class="card">
+    <div class="card-title">Environmental Coherence Analysis</div>
+    <div class="g4" id="env-grid">
+      <div class="mbox"><div class="mb-lbl">Location Impact</div><div class="mb-val" id="env-loc" style="font-size:14px;">—</div></div>
+      <div class="mbox"><div class="mb-lbl">Climate Stress</div><div class="mb-val" id="env-climate" style="font-size:14px;">—</div></div>
+      <div class="mbox"><div class="mb-lbl">Air Quality</div><div class="mb-val" id="env-air" style="font-size:14px;">—</div></div>
+      <div class="mbox"><div class="mb-lbl">Vitamin D (Sun)</div><div class="mb-val" id="env-sun" style="font-size:14px;">—</div></div>
+    </div>
+  </div>
+
+  <!-- Nutrition Analysis -->
+  <div class="card">
+    <div class="card-title">Nutritional Coherence Analysis</div>
+    <div class="g4" id="nutrition-grid">
+      <div class="mbox"><div class="mb-lbl">Diet Quality</div><div class="mb-val" id="nut-quality" style="font-size:14px;">—</div></div>
+      <div class="mbox"><div class="mb-lbl">Food Diversity</div><div class="mb-val" id="nut-diversity" style="font-size:14px;">—</div></div>
+      <div class="mbox"><div class="mb-lbl">Anti-Nutrients</div><div class="mb-val" id="nut-anti" style="font-size:14px;">—</div></div>
+      <div class="mbox"><div class="mb-lbl">Meal Pattern</div><div class="mb-val" id="nut-pattern" style="font-size:14px;">—</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ REPORT PANEL ══ -->
+<div id="pnl-report" class="pnl">
+  <div class="card">
+    <div class="card-title"><span class="rdot" style="background:var(--life)"></span>Full Spectrum Wellness Report</div>
+    <div class="report" id="full-report">
+      <p style="color:var(--muted);font-family:'DM Mono',monospace;font-size:11px;">
+        ← Complete the input form and run analysis to generate your personalized report
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PROTOCOLS PANEL ══ -->
+<div id="pnl-protocols" class="pnl">
+  <div class="card">
+    <div class="card-title">Personalized Recovery & Optimization Protocols</div>
+    <div id="proto-container">
+      <p style="color:var(--muted);font-family:'DM Mono',monospace;font-size:11px;">Run analysis to generate protocols</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══ HISTORY PANEL ══ -->
+<div id="pnl-history" class="pnl">
+  <div class="card">
+    <div class="card-title">7-Day Coherence Tracking</div>
+    <canvas id="history-canvas" height="220"></canvas>
+    <div style="display:flex;gap:16px;margin-top:12px;flex-wrap:wrap;">
+      <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--life);">● Overall Coherence</span>
+      <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--calm);">● Sleep Score</span>
+      <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--warn);">● Nutrition Score</span>
+      <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--earth);">● Environment Score</span>
+    </div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="card-title">Log Today's Entry</div>
+      <button class="analyze-btn" onclick="saveToHistory()">💾 &nbsp; SAVE TODAY'S ANALYSIS TO HISTORY</button>
+      <div id="history-entries" style="margin-top:14px;font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);">No entries yet</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Trend Insights</div>
+      <div id="trend-insights" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);line-height:2;">
+        Save at least 3 days of data to see trend analysis
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /wrap -->
+
+<script>
+'use strict';
+const EPS=1e-12;
+let historyLog=[];
+let lastResult=null;
+let prevScore=null;
+let selectedFoods=new Set(['fruits']);
+
+// ── TIME ──
+function tick(){
+  const n=new Date();
+  document.getElementById('htime').textContent=n.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('hdate').textContent=n.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+}
+setInterval(tick,1000); tick();
+
+// ── TABS ──
+function swTab(id,el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('act'));
+  document.querySelectorAll('.pnl').forEach(p=>p.classList.remove('act'));
+  el.classList.add('act');
+  document.getElementById('pnl-'+id).classList.add('act');
+  if(id==='history') drawHistory();
+}
+
+// ── FOOD TAGS ──
+function toggleFood(el,food){
+  el.classList.toggle('sel');
+  if(el.classList.contains('sel')) selectedFoods.add(food);
+  else selectedFoods.delete(food);
+  liveCompute();
+}
+function toggleChip(el,groupId){
+  document.querySelectorAll(`#${groupId} .chip`).forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+  liveCompute();
+}
+
+// ── READ ALL INPUTS ──
+function getInputs(){
+  const getChip=id=>{const s=document.querySelector(`#${id} .chip.sel`);return s?s.textContent.trim():'';}
+  return {
+    age:     +document.getElementById('i-age').value||25,
+    sex:     document.getElementById('i-sex').value,
+    height:  +document.getElementById('i-height').value||170,
+    weight:  +document.getElementById('i-weight').value||70,
+    waist:   +document.getElementById('i-waist').value||80,
+    hr:      +document.getElementById('i-hr').value||70,
+    location:document.getElementById('i-location').value,
+    climate: document.getElementById('i-climate').value,
+    aqi:     document.getElementById('i-aqi').value,
+    noise:   document.getElementById('i-noise').value,
+    sun:     document.getElementById('i-sun').value,
+    living:  document.getElementById('i-living').value,
+    sleep:   +document.getElementById('sl-sleep').value,
+    stress:  +document.getElementById('sl-stress').value,
+    energy:  +document.getElementById('sl-energy').value,
+    focus:   +document.getElementById('sl-focus').value,
+    mood:    +document.getElementById('sl-mood').value,
+    water:   +document.getElementById('sl-water').value,
+    exercise:+document.getElementById('sl-ex').value,
+    diet:    document.getElementById('i-diet').value,
+    meals:   +document.getElementById('i-meals').value,
+    foods:   [...selectedFoods],
+    eatHabit:getChip('eating-habit'),
+    workType:getChip('work-type'),
+    screen:  getChip('screen-time'),
+    social:  getChip('social'),
+  };
+}
+
+// ── BODY COMPOSITION ──
+function calcBMI(weight,height){
+  const h=height/100;
+  return weight/(h*h);
+}
+function bmiCategory(bmi){
+  if(bmi<18.5) return {cat:'Underweight',color:'var(--calm)',score:6};
+  if(bmi<25)   return {cat:'Normal weight',color:'var(--life)',score:10};
+  if(bmi<30)   return {cat:'Overweight',color:'var(--warn)',score:6};
+  if(bmi<35)   return {cat:'Obese I',color:'var(--pulse)',score:4};
+  return          {cat:'Obese II+',color:'var(--danger)',score:2};
+}
+function calcTDEE(inp){
+  // Mifflin-St Jeor BMR
+  let bmr = inp.sex==='F'
+    ? 10*inp.weight + 6.25*inp.height - 5*inp.age - 161
+    : 10*inp.weight + 6.25*inp.height - 5*inp.age + 5;
+  const actMult = inp.workType.includes('Sedentary')||inp.workType.includes('Desk') ? 1.2
+    : inp.workType.includes('Light') ? 1.375
+    : inp.workType.includes('Moderate') ? 1.55
+    : 1.725;
+  const exBonus = inp.exercise * 5; // ~5 kcal/min
+  return Math.round(bmr * actMult + exBonus);
+}
+
+// ── ENVIRONMENT SCORE ──
+function calcEnvScore(inp){
+  let score=7;
+  const aqiScores={good:10,moderate:7,unhealthy:4,very_unhealthy:2};
+  const noiseScores={quiet:10,moderate:7,loud:4,very_loud:2};
+  const sunScores={none:3,low:5,moderate:7,good:9,high:10};
+  const locScores={mountain:9,rural:8,suburb:7,coastal:8,city:5,desert:5};
+  score = (aqiScores[inp.aqi]||5)*0.3 + noiseScores[inp.noise]*0.2 + sunScores[inp.sun]*0.3 + locScores[inp.location]*0.2;
+  return {score, label:score>=8?'Excellent':score>=6?'Good':score>=4?'Moderate':'Poor'};
+}
+
+// ── NUTRITION SCORE ──
+function calcNutritionScore(inp){
+  const foods=inp.foods;
+  let score=5;
+  const positive=['vegetables','fruits','grains','protein','legumes','nuts','fish','eggs','dal'];
+  const negative=['processed','sugar','alcohol','fastfood'];
+  const posCount=positive.filter(f=>foods.includes(f)).length;
+  const negCount=negative.filter(f=>foods.includes(f)).length;
+  const dietScores={mediterranean:9,vegan:8,vegetarian:8,paleo:7,omnivore:7,keto:7,intermittent:7,junk:3};
+  score = (dietScores[inp.diet]||6) * 0.4 + (posCount/positive.length)*10*0.4 + Math.max(0,10-negCount*2.5)*0.2;
+  score = Math.min(10, score);
+  const diversity = posCount;
+  const antiNutrient = negCount >= 3 ? 'HIGH' : negCount >= 1 ? 'MODERATE' : 'LOW';
+  return {score, diversity, antiNutrient, dietQuality:dietScores[inp.diet]||6};
+}
+
+// ── TCCL BIO ENGINE ──
+function computeTCCL(inp){
+  const bmi=calcBMI(inp.weight,inp.height);
+  const bmiInfo=bmiCategory(bmi);
+  const env=calcEnvScore(inp);
+  const nut=calcNutritionScore(inp);
+  const tdee=calcTDEE(inp);
+
+  // Normalize all dimensions to 0-10
+  const dims = {
+    sleep:    Math.min(10, (inp.sleep/8)*10),
+    stress:   Math.max(0, 10-(inp.stress/10)*10),
+    energy:   inp.energy,
+    focus:    inp.focus,
+    mood:     inp.mood,
+    water:    Math.min(10, (inp.water/8)*10),
+    exercise: Math.min(10, (inp.exercise/30)*10),
+    bmi:      bmiInfo.score,
+    heart:    inp.hr<=60?10:inp.hr<=80?8:inp.hr<=100?5:3,
+    env:      env.score,
+    nutrition:nut.score,
+    social:   inp.social.includes('Very')?9:inp.social.includes('Good')?8:inp.social.includes('Some')?6:3,
+    screen:   inp.screen.includes('<2')?9:inp.screen.includes('2–6')?7:inp.screen.includes('6–10')?4:2,
+    waist:    inp.sex==='F'?(inp.waist<80?9:inp.waist<88?6:3):(inp.waist<94?9:inp.waist<102?6:3),
+  };
+
+  // Weights (total=1.0)
+  const weights={sleep:.14,stress:.12,energy:.10,focus:.08,mood:.06,water:.05,exercise:.08,
+    bmi:.08,heart:.05,env:.08,nutrition:.10,social:.04,screen:.03,waist:.05,};
+
+  let CA=0;
+  Object.keys(weights).forEach(k=>CA+=dims[k]*weights[k]);
+
+  // Coherence score (0-100)
+  const score=Math.round(CA*10);
+
+  // Deviation from ideal (10*10=100)
+  const D=((CA-10)/10)*100;
+
+  // Phase direction
+  const PD=prevScore!==null?CA-prevScore:0;
+
+  return {score,CA,D,PD,dims,weights,bmi,bmiInfo,env,nut,tdee,inp};
+}
+
+// ── SIGNAL ──
+function getSignal(r){
+  const s=r.score;
+  if(s>=85) return{sig:'FLOURISHING',desc:'Your human system is in peak coherence. All major dimensions are aligned.',color:'var(--life)',bg:'rgba(77,232,154,.1)',border:'rgba(77,232,154,.3)'};
+  if(s>=72) return{sig:'COHERENT',desc:'Strong alignment across dimensions. Minor optimizations available.',color:'var(--life)',bg:'rgba(77,232,154,.07)',border:'rgba(77,232,154,.2)'};
+  if(s>=60) return{sig:'RECOVERING',desc:'Positive trajectory with some imbalances. Protocol adherence will restore coherence.',color:'var(--calm)',bg:'rgba(80,200,232,.08)',border:'rgba(80,200,232,.2)'};
+  if(s>=48) return{sig:'IMBALANCED',desc:'Multiple dimensions below Coherence Axis. Intervention recommended.',color:'var(--warn)',bg:'rgba(240,200,64,.08)',border:'rgba(240,200,64,.2)'};
+  if(s>=35) return{sig:'DEPLETED',desc:'Significant incoherence detected. Prioritize rest, nutrition, and stress reduction.',color:'var(--pulse)',bg:'rgba(240,120,72,.1)',border:'rgba(240,120,72,.25)'};
+  return{sig:'CRITICAL',desc:'System in critical deviation. Immediate protocol activation required.',color:'var(--danger)',bg:'rgba(232,88,88,.12)',border:'rgba(232,88,88,.3)'};
+}
+
+// ── LIVE COMPUTE (header only) ──
+function liveCompute(){
+  try{
+    const inp=getInputs();
+    const r=computeTCCL(inp);
+    const sig=getSignal(r);
+    const circ=232;
+    const offset=circ-(r.score/100)*circ;
+    document.getElementById('ring-fill').style.strokeDashoffset=offset;
+    document.getElementById('ring-fill').style.stroke=sig.color;
+    document.getElementById('ri-score').textContent=r.score+'%';
+    document.getElementById('ri-score').style.color=sig.color;
+    document.getElementById('si-state').textContent=sig.sig;
+    document.getElementById('si-state').style.color=sig.color;
+    document.getElementById('si-sub').textContent=r.score>=70?'System coherent':'Deviation detected';
+  }catch(e){}
+}
+
+// ── FULL ANALYSIS ──
+function runFullAnalysis(){
+  const inp=getInputs();
+  const r=computeTCCL(inp);
+  const sig=getSignal(r);
+  lastResult={r,sig,inp};
+  prevScore=r.CA;
+
+  liveCompute();
+  updateAnalysisPanel(r,sig,inp);
+  generateReport(r,sig,inp);
+  generateProtocols(r,sig,inp);
+  swTab('analysis',document.querySelectorAll('.tab')[1]);
+}
+
+// ── UPDATE ANALYSIS PANEL ──
+function updateAnalysisPanel(r,sig,inp){
+  // Vitals strip
+  const vMap=[
+    ['sleep',inp.sleep+'h','var(--calm)',inp.sleep>=7&&inp.sleep<=9],
+    ['stress',inp.stress+'/10','var(--pulse)',inp.stress<=4],
+    ['energy',inp.energy+'/10','var(--life)',inp.energy>=7],
+    ['focus',inp.focus+'/10','var(--mind)',inp.focus>=7],
+    ['nutrition',r.nut.score.toFixed(1)+'/10','var(--warn)',r.nut.score>=7],
+    ['env',r.env.label,'var(--earth)',r.env.score>=7],
+  ];
+  vMap.forEach(([id,val,clr,good])=>{
+    const vEl=document.getElementById('vs-'+id);
+    const dEl=document.getElementById('vd-'+id);
+    if(vEl){vEl.textContent=val;}
+    if(dEl){
+      dEl.textContent=good?'✓ Optimal':'⚠ Adjust';
+      dEl.style.background=good?'rgba(77,232,154,.1)':'rgba(240,120,72,.1)';
+      dEl.style.color=good?'var(--life)':'var(--pulse)';
+    }
+  });
+
+  // Axis pin
+  const pct=Math.max(5,Math.min(95,r.score));
+  const pin=document.getElementById('axis-pin');
+  pin.style.left=pct+'%';
+  pin.style.borderColor=sig.color;
+  pin.style.color=sig.color;
+
+  // TCCL metrics
+  document.getElementById('mb-ca').textContent=r.score+'%';
+  document.getElementById('mb-ca').style.color=sig.color;
+  document.getElementById('mb-dev').textContent=r.D.toFixed(1)+'%';
+  document.getElementById('mb-dev').style.color=r.D>-10?'var(--life)':'var(--danger)';
+  document.getElementById('mb-pd').textContent=r.PD>0?'↑ RISING':r.PD<0?'↓ FALLING':'→ STABLE';
+  document.getElementById('mb-pd').style.color=r.PD>0?'var(--life)':r.PD<0?'var(--pulse)':'var(--muted)';
+
+  // Signal box
+  const sb=document.getElementById('sig-box');
+  sb.style.background=sig.bg; sb.style.borderColor=sig.border;
+  document.getElementById('sig-main').textContent=sig.sig;
+  document.getElementById('sig-main').style.color=sig.color;
+  document.getElementById('sig-desc').textContent=sig.desc;
+
+  // BMI
+  const bmi=r.bmi.toFixed(1);
+  document.getElementById('bmi-val').textContent=bmi;
+  document.getElementById('bmi-val').style.color=r.bmiInfo.color;
+  document.getElementById('bmi-cat').textContent=r.bmiInfo.cat;
+  // BMI bar pin (0=underweight 18.5, 1=normal 18.5-25, 2=overweight 25-30, 3=obese 30+)
+  const bmiPct=Math.min(95,Math.max(5,(r.bmi-15)/25*100));
+  document.getElementById('bmi-pin').style.left=bmiPct+'%';
+
+  // Ideal weight
+  const hm=inp.height/100;
+  const idealMin=(18.5*hm*hm).toFixed(0), idealMax=(24.9*hm*hm).toFixed(0);
+  document.getElementById('ideal-wt').textContent=idealMin+'–'+idealMax+' kg';
+  document.getElementById('ideal-wt-sub').textContent=inp.weight<idealMin?'↑ Under ideal':inp.weight>idealMax?'↓ Above ideal':'✓ Within ideal';
+
+  // WHR
+  const whr=(inp.waist/inp.height).toFixed(2);
+  document.getElementById('whr-val').textContent=whr;
+  document.getElementById('whr-cat').textContent=whr<0.5?'Excellent (<0.5)':whr<0.6?'Good (0.5–0.6)':'High risk (>0.6)';
+
+  // TDEE
+  document.getElementById('tdee-val').textContent=r.tdee+' kcal';
+
+  // Environment grid
+  const locLabels={mountain:'🏔 Excellent',rural:'🌿 Very Good',coastal:'🌊 Good',suburb:'🏘 Good',city:'🏙 Moderate',desert:'🏜 Challenging'};
+  const climLabels={temperate:'✓ Optimal',mediterranean:'✓ Great',subtropical:'~ Warm',tropical:'~ Hot/Humid',continental:'~ Variable',cold:'❄ Cold stress',arid:'~ Dry stress'};
+  const aqiLabels={good:'✓ Clean',moderate:'~ Acceptable',unhealthy:'⚠ Harmful',very_unhealthy:'✗ Toxic'};
+  const sunLabels={none:'✗ Deficient',low:'⚠ Low',moderate:'✓ Adequate',good:'✓ Good',high:'✓ Optimal'};
+  document.getElementById('env-loc').textContent=locLabels[inp.location]||inp.location;
+  document.getElementById('env-climate').textContent=climLabels[inp.climate]||inp.climate;
+  document.getElementById('env-air').textContent=aqiLabels[inp.aqi]||inp.aqi;
+  document.getElementById('env-sun').textContent=sunLabels[inp.sun]||inp.sun;
+
+  // Nutrition grid
+  document.getElementById('nut-quality').textContent=r.nut.score.toFixed(1)+'/10';
+  document.getElementById('nut-diversity').textContent=r.nut.diversity+' food groups';
+  document.getElementById('nut-anti').textContent=r.nut.antiNutrient;
+  document.getElementById('nut-anti').style.color=r.nut.antiNutrient==='HIGH'?'var(--danger)':r.nut.antiNutrient==='MODERATE'?'var(--warn)':'var(--life)';
+  const mealLabels={'1':'1 meal — risk of underfueling','2':'2 meals — intermittent ok','3':'3 meals — standard','4':'4+ meals — frequent'};
+  document.getElementById('nut-pattern').textContent=mealLabels[inp.meals]||'—';
+}
+
+// ── REPORT GENERATOR ──
+function generateReport(r,sig,inp){
+  const now=new Date();
+  const dateStr=now.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const timeStr=now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+
+  // Find top 3 weakest dims
+  const dimScores=Object.entries(r.dims).sort((a,b)=>a[1]-b[1]);
+  const weakest=dimScores[0], weak2=dimScores[1];
+  const strongest=dimScores[dimScores.length-1];
+  const dimNames={sleep:'sleep',stress:'stress resilience',energy:'energy levels',focus:'cognitive focus',
+    mood:'emotional wellbeing',water:'hydration',exercise:'physical movement',bmi:'body composition',
+    heart:'cardiovascular fitness',env:'environmental quality',nutrition:'nutritional intake',
+    social:'social connection',screen:'digital wellness',waist:'metabolic risk'};
+
+  const dietDescriptions={
+    omnivore:'omnivorous diet provides broad nutrient access when quality sources are chosen',
+    vegetarian:'plant-based diet is associated with lower chronic disease risk when well-planned',
+    vegan:'fully plant-based diet requires careful attention to B12, iron, and omega-3 sourcing',
+    keto:'ketogenic approach can improve metabolic markers but requires electrolyte management',
+    mediterranean:'Mediterranean diet has the strongest evidence base for longevity and cognitive health',
+    paleo:'ancestral diet emphasizes whole foods and eliminates processed carbohydrates',
+    intermittent:'intermittent fasting regulates insulin sensitivity and autophagy pathways',
+    junk:'high processed food intake is strongly associated with systemic inflammation and metabolic dysfunction',
+  };
+
+  const envDescriptions={
+    mountain:'High altitude environments demand cardiovascular adaptation and can impair sleep quality initially',
+    city:'Urban environments carry chronic noise and air pollution load — deliberate green space exposure is protective',
+    suburb:'Suburban environments offer balance between access and environmental quality',
+    rural:'Rural environments provide air quality and noise advantages with natural circadian rhythm support',
+    coastal:'Coastal environments combine negative ion benefits with physical activity opportunities',
+    desert:'Arid environments demand heightened hydration vigilance and skin barrier protection',
+  };
+
+  const html=`
+    <div style="border-bottom:1px solid var(--edge);padding-bottom:14px;margin-bottom:18px;">
+      <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:2px;margin-bottom:6px;">
+        FULL SPECTRUM WELLNESS INTELLIGENCE · ${dateStr.toUpperCase()} · ${timeStr}
+      </div>
+      <h3>Human Coherence Assessment — ${sig.sig} State (${r.score}%)</h3>
+      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center;">
+        <span style="font-family:'DM Mono',monospace;font-size:10px;padding:3px 10px;border-radius:4px;
+          background:${sig.bg};color:${sig.color};border:1px solid ${sig.border};">${sig.sig}</span>
+        <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);">
+          BMI ${r.bmi.toFixed(1)} · TDEE ${r.tdee} kcal · ${inp.age}y ${inp.sex}</span>
+      </div>
+    </div>
+
+    <p>At ${inp.age} years, ${inp.weight}kg, ${inp.height}cm, your biological profile presents a Human Coherence Score of <strong>${r.score}%</strong> — placing your system in the <strong style="color:${sig.color}">${sig.sig}</strong> state. ${sig.desc} The TCCL Coherence Axis, calibrated across 14 biological, environmental, and behavioral dimensions, registers a deviation of ${r.D.toFixed(1)}% from the ideal equilibrium.</p>
+
+    <p>Your ${r.bmiInfo.cat.toLowerCase()} BMI of ${r.bmi.toFixed(1)} ${r.bmiInfo.cat==='Normal weight'?'places you within the optimal weight range, supporting metabolic efficiency and reduced disease risk':'represents a deviation from the optimal metabolic range — a key target for coherence restoration'}. Estimated total daily energy expenditure (TDEE) is ${r.tdee} kcal based on your physical profile and activity pattern.</p>
+
+    <div class="hl" style="border-color:${sig.color};color:var(--text);">
+      <strong>Primary Coherence Disruptor:</strong> ${dimNames[weakest[0]]} (${(weakest[1]).toFixed(1)}/10) · <strong>Secondary:</strong> ${dimNames[weak2[0]]} (${(weak2[1]).toFixed(1)}/10) · <strong>Strongest Asset:</strong> ${dimNames[strongest[0]]} (${(strongest[1]).toFixed(1)}/10)
+    </div>
+
+    <p>Your ${dietDescriptions[inp.diet]||'current diet'}. Today's nutritional diversity score is ${r.nut.diversity} active food groups — ${r.nut.diversity>=6?'excellent variety supporting broad micronutrient coverage':r.nut.diversity>=4?'moderate diversity — expanding to 7+ groups would improve micronutrient completeness':'limited diversity, increasing the risk of micronutrient gaps'}. Anti-nutrient load is <strong>${r.nut.antiNutrient.toLowerCase()}</strong> — ${r.nut.antiNutrient==='LOW'?'supporting optimal nutrient absorption':r.nut.antiNutrient==='MODERATE'?'manageable with adequate hydration and food pairing':'consider reducing processed and high-sugar foods to reduce systemic inflammation'}.</p>
+
+    <p>${envDescriptions[inp.location]||'Your environment contributes meaningfully to your coherence profile'}. Air quality is ${inp.aqi.replace('_',' ')}, contributing ${r.env.score>=7?'positively':'negatively'} to your environmental coherence score of ${r.env.score.toFixed(1)}/10. Sun exposure — a primary regulator of circadian rhythm, vitamin D synthesis, and serotonin production — is currently ${inp.sun} (${inp.sun==='none'||inp.sun==='low'?'below the threshold for optimal hormonal regulation':'within the adequate range'}).</p>
+
+    <p>Sleep of ${inp.sleep} hours ${inp.sleep>=7&&inp.sleep<=9?'falls within the optimal 7-9 hour window, supporting memory consolidation, hormonal regulation, and immune function':'deviates from the recommended 7-9 hours — this is the single highest-leverage intervention available to you today'}. Stress at ${inp.stress}/10 ${inp.stress<=4?'is well-managed — protective neurological and immune benefits are active':'represents a cortisol elevation pattern that suppresses immune function, impairs cognition, and accelerates cellular aging if sustained'}.</p>
+
+    <div class="hl" style="border-color:var(--calm);color:var(--text);">
+      <strong>TCCL Trajectory:</strong> ${r.PD>0?'Positive momentum — system is improving from previous baseline':'Stable or declining — protocol activation recommended to prevent further deviation'}. Phase Direction: ${r.PD>0?'↑ RISING':'↓ FALLING / STABLE'}.
+    </div>
+
+    <p>The TCCL Coherence Axis model predicts ${r.score>=70?'maintenance of current state with consistent protocol adherence':r.score>=50?'recovery to coherence within 48-72 hours with targeted interventions on the primary disruptors':'significant recovery potential — typically 5-10 days with full protocol implementation'}. Your body's corrective forces — homeostatic mechanisms refined over millions of years of evolution — are powerful when given the right conditions.</p>
+
+    <div class="report-footer">
+      <span>Age: ${inp.age}y</span><span>Weight: ${inp.weight}kg</span><span>Height: ${inp.height}cm</span>
+      <span>BMI: ${r.bmi.toFixed(1)}</span><span>TDEE: ${r.tdee}kcal</span>
+      <span>Sleep: ${inp.sleep}h</span><span>Stress: ${inp.stress}/10</span>
+      <span>Exercise: ${inp.exercise}m</span><span>Water: ${inp.water}gl</span>
+      <span style="margin-left:auto;">tikaramojha Wellness OS · TCCL Bio Engine · ${timeStr}</span>
+    </div>`;
+
+  document.getElementById('full-report').innerHTML=html;
+}
+
+// ── PROTOCOLS ──
+function generateProtocols(r,sig,inp){
+  const protos=[];
+
+  if(inp.sleep<6.5)
+    protos.push({icon:'🌙',cat:'SLEEP',action:'Sleep Restoration Protocol',detail:`Target ${inp.sex==='F'?'8-9':'7.5-8.5'} hours. Avoid screens 90min before bed. Keep bedroom at 18-20°C. Consistent wake time, even on weekends.`,urgency:'CRITICAL',uColor:'var(--danger)'});
+  if(inp.stress>6)
+    protos.push({icon:'🫁',cat:'STRESS',action:'Cortisol Regulation Protocol',detail:'Box breathing: inhale 4s, hold 4s, exhale 4s, hold 4s. Repeat 8 cycles morning and evening. Cold exposure (30s cool shower) reduces cortisol acutely.',urgency:'HIGH',uColor:'var(--pulse)'});
+  if(inp.exercise===0)
+    protos.push({icon:'🏃',cat:'MOVEMENT',action:'Movement Activation Protocol',detail:'20-minute brisk walk minimum. Triggers BDNF, reduces cortisol, improves insulin sensitivity within 15 minutes. Non-negotiable for coherence.',urgency:'HIGH',uColor:'var(--pulse)'});
+  if(r.bmi>27)
+    protos.push({icon:'⚖️',cat:'BODY COMPOSITION',action:'Metabolic Recalibration',detail:`Create 300-400kcal daily deficit from current TDEE (${r.tdee}kcal). Prioritize protein (${Math.round(inp.weight*1.6)}g/day). Resistance training 3x/week.`,urgency:'MODERATE',uColor:'var(--warn)'});
+  if(inp.water<6)
+    protos.push({icon:'💧',cat:'HYDRATION',action:'Cellular Hydration Protocol',detail:`Target ${Math.round(inp.weight*0.033)}L (${Math.round(inp.weight*0.033/0.25)} glasses) today. Front-load: 500ml on waking. Add electrolytes if exercising.`,urgency:inp.water<3?'HIGH':'MODERATE',uColor:inp.water<3?'var(--pulse)':'var(--warn)'});
+  if(r.nut.score<5||inp.foods.includes('junk')||inp.foods.includes('fastfood'))
+    protos.push({icon:'🥗',cat:'NUTRITION',action:'Anti-Inflammatory Reset',detail:'Eliminate ultra-processed foods for 72 hours. Replace with: vegetables, legumes, fish/eggs, nuts. Each whole food is a signal to your epigenome.',urgency:'HIGH',uColor:'var(--pulse)'});
+  if(inp.aqi==='unhealthy'||inp.aqi==='very_unhealthy')
+    protos.push({icon:'😷',cat:'ENVIRONMENT',action:'Air Quality Mitigation',detail:'Use N95/N99 mask outdoors. Run HEPA air purifier indoors. Avoid peak traffic hours. Exercise indoors when AQI>100.',urgency:'HIGH',uColor:'var(--pulse)'});
+  if(inp.sun==='none'||inp.sun==='low')
+    protos.push({icon:'☀️',cat:'CIRCADIAN',action:'Light Therapy Protocol',detail:'Get 15-20min direct sunlight before 10am to set circadian clock. Regulates melatonin, cortisol, and serotonin. Light therapy lamp (10,000 lux) is a substitute.',urgency:'MODERATE',uColor:'var(--warn)'});
+  if(inp.screen.includes('6–10')||inp.screen.includes('10h+'))
+    protos.push({icon:'👁️',cat:'DIGITAL WELLNESS',action:'Screen Recovery Protocol',detail:'20-20-20 rule: every 20min look 20ft away for 20sec. Blue light filter after sunset. Digital sunset (phone off) 1hr before sleep.',urgency:'MODERATE',uColor:'var(--warn)'});
+  if(inp.focus<5)
+    protos.push({icon:'🧠',cat:'COGNITIVE',action:'Focus Restoration Protocol',detail:'Single-task work blocks: 90min on, 20min off. No notifications during focus. Brain is sharpest 2-4h post-waking. Avoid context-switching.',urgency:'MODERATE',uColor:'var(--warn)'});
+  if(r.score>=70)
+    protos.push({icon:'✨',cat:'OPTIMIZATION',action:'Peak Coherence Maintenance',detail:'You are operating well. Add one deliberate growth action: new skill, harder workout, deeper social connection. Coherence compounds.',urgency:'OPTIMIZE',uColor:'var(--life)'});
+
+  const show=protos.slice(0,8);
+  while(show.length<2) show.push({icon:'✓',cat:'OPTIMAL',action:'Dimension Healthy',detail:'This dimension is within optimal range. Maintain consistency.',urgency:'MAINTAIN',uColor:'var(--life)'});
+
+  document.getElementById('proto-container').innerHTML=`
+    <div class="proto-grid">
+      ${show.map(p=>`
+        <div class="proto">
+          <div class="proto-icon">${p.icon}</div>
+          <div class="proto-cat">${p.cat}</div>
+          <div class="proto-action">${p.action}</div>
+          <div class="proto-detail">${p.detail}</div>
+          <div class="proto-urgency" style="background:${p.uColor}22;color:${p.uColor};border:1px solid ${p.uColor}44;">${p.urgency}</div>
+        </div>`).join('')}
+    </div>`;
+}
+
+// ── HISTORY ──
+function saveToHistory(){
+  if(!lastResult){alert('Run analysis first!');return;}
+  const {r,sig,inp}=lastResult;
+  const entry={
+    date:new Date().toLocaleDateString('en',{month:'short',day:'numeric'}),
+    score:r.score, sig:sig.sig, sleep:inp.sleep, stress:inp.stress,
+    nutrition:r.nut.score.toFixed(1), env:r.env.score.toFixed(1),
+    bmi:r.bmi.toFixed(1), weight:inp.weight
+  };
+  historyLog.push(entry);
+  if(historyLog.length>7) historyLog.shift();
+  renderHistoryEntries();
+  drawHistory();
+  renderTrendInsights();
+  alert('✓ Entry saved to history!');
+}
+
+function renderHistoryEntries(){
+  if(historyLog.length===0){document.getElementById('history-entries').textContent='No entries yet';return;}
+  document.getElementById('history-entries').innerHTML=historyLog.map(e=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;
+      border-bottom:1px solid var(--edge);">
+      <span style="color:var(--muted);">${e.date}</span>
+      <span style="color:var(--text);font-weight:500;">${e.score}%</span>
+      <span style="color:${e.score>=70?'var(--life)':e.score>=50?'var(--warn)':'var(--danger)'};">${e.sig}</span>
+      <span style="color:var(--muted);">BMI ${e.bmi}</span>
+    </div>`).join('');
+}
+
+function renderTrendInsights(){
+  if(historyLog.length<3){document.getElementById('trend-insights').textContent='Save at least 3 days of data';return;}
+  const scores=historyLog.map(e=>e.score);
+  const trend=scores[scores.length-1]-scores[0];
+  const avg=scores.reduce((a,b)=>a+b,0)/scores.length;
+  document.getElementById('trend-insights').innerHTML=`
+    <div style="line-height:2.2;">
+      <div>7-day avg: <strong style="color:var(--life);">${avg.toFixed(0)}%</strong></div>
+      <div>Trend: <strong style="color:${trend>0?'var(--life)':trend<0?'var(--danger)':'var(--muted)'};">${trend>0?'↑ Improving':trend<0?'↓ Declining':'→ Stable'} (${trend>0?'+':''}${trend.toFixed(0)}%)</strong></div>
+      <div>Best day: <strong>${Math.max(...scores)}%</strong></div>
+      <div>Entries: <strong>${historyLog.length} / 7</strong></div>
+    </div>`;
+}
+
+function drawHistory(){
+  const canvas=document.getElementById('history-canvas');
+  if(!canvas) return;
+  const ctx=canvas.getContext('2d');
+  const W=canvas.offsetWidth||800, H=220;
+  canvas.width=W; canvas.height=H;
+
+  // Mock 7 days
+  const days=[];
+  for(let i=6;i>=1;i--){
+    const d=new Date(); d.setDate(d.getDate()-i);
+    days.push({date:d.toLocaleDateString('en',{weekday:'short'}),
+      score:50+Math.random()*40, sleep:6+Math.random()*3,
+      nutrition:5+Math.random()*5, env:5+Math.random()*5});
+  }
+  if(historyLog.length>0){
+    const l=historyLog[historyLog.length-1];
+    days.push({date:'Today',score:l.score,sleep:l.sleep*10/9,
+      nutrition:+l.nutrition*10,env:+l.env*10});
+  } else {
+    days.push({date:'Today',score:70,sleep:75,nutrition:65,env:60});
+  }
+
+  ctx.fillStyle='#161622'; ctx.fillRect(0,0,W,H);
+
+  // Grid
+  for(let i=0;i<=4;i++){
+    const y=20+i*(H-40)/4;
+    ctx.beginPath();ctx.moveTo(50,y);ctx.lineTo(W-10,y);
+    ctx.strokeStyle='rgba(255,255,255,.04)';ctx.lineWidth=1;ctx.stroke();
+    ctx.fillStyle='rgba(255,255,255,.25)';ctx.font='9px DM Mono';
+    ctx.fillText((100-i*25)+'%',4,y+3);
+  }
+
+  const xs=i=>50+i*(W-70)/(days.length-1);
+  const ys=v=>20+(H-40)*(1-v/100);
+
+  const drawLine=(key,color,lw=2)=>{
+    ctx.beginPath();
+    days.forEach((d,i)=>{const x=xs(i),y=ys(d[key]);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+    ctx.strokeStyle=color;ctx.lineWidth=lw;ctx.stroke();
+  };
+
+  drawLine('env','rgba(143,188,111,.5)',1.5);
+  drawLine('nutrition','rgba(240,200,64,.5)',1.5);
+  drawLine('sleep','rgba(80,200,232,.5)',1.5);
+  drawLine('score','var(--life)',2.5);
+
+  days.forEach((d,i)=>{
+    const x=xs(i),y=ys(d.score);
+    ctx.beginPath();ctx.arc(x,y,d.date==='Today'?6:4,0,Math.PI*2);
+    ctx.fillStyle=d.date==='Today'?'var(--life)':'var(--surface)';
+    ctx.strokeStyle='var(--life)';ctx.lineWidth=2;ctx.fill();ctx.stroke();
+    ctx.fillStyle='rgba(255,255,255,.5)';ctx.font='9px DM Mono';
+    ctx.textAlign='center';ctx.fillText(d.date,x,H-4);
+    if(d.date==='Today'){ctx.fillStyle='var(--life)';ctx.fillText(d.score+'%',x,y-12);}
+  });
+}
+
+// ── INIT ──
+liveCompute();
+setTimeout(()=>runFullAnalysis(),500);
+window.addEventListener('resize',drawHistory);
+</script>
+</body>
+</html>
