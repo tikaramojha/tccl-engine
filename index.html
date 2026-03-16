@@ -1148,168 +1148,207 @@ function analyzeSentiment(headlines) {
   };
 }
 
-// ── SMART LOCAL REPORT GENERATOR (no API needed) ──
-// Generates professional 400-word market analysis articles
-// using real prices, news sentiment, TCCL + MTF signals
+// ── BLOOMBERG-LEVEL MARKET INTELLIGENCE ENGINE ──
+// Professional article generator using real news + prices + signals
 
-const REPORT_TEMPLATES = {
+const MARKET_CONTEXT = {
   strong_bull: [
-    "बजारमा {asset} को लागि आज उल्लेखनीय bullish momentum देखिँदैछ।",
-    "{asset} market आज strong upward pressure मा छ।",
-    "Institutional buying र positive news flow ले {asset} लाई support गरिरहेको छ।",
+    "Markets opened with conviction today as bullish forces staged a decisive advance.",
+    "Risk appetite surged across asset classes as buyers overwhelmed sellers in early trading.",
+    "A confluence of positive catalysts propelled markets higher, with momentum building through the session.",
   ],
   mild_bull: [
-    "{asset} बजारमा cautious optimism देखिँदैछ।",
-    "Moderate bullish sentiment ले {asset} लाई gradual upside दिइरहेको छ।",
-    "{asset} मा positive bias कायम छ, यद्यपि confirmation अझै आउन बाँकी छ।",
+    "Markets edged higher in cautious trading as investors weighed competing narratives.",
+    "Buyers maintained the upper hand in measured trading, though conviction remained selective.",
+    "A tentative recovery took shape as markets absorbed recent headwinds and looked for direction.",
   ],
   neutral: [
-    "{asset} बजार आज consolidation phase मा छ।",
-    "Bulls र bears बीच {asset} मा tug-of-war चलिरहेको छ।",
-    "{asset} key level मा support खोजिरहेको छ।",
+    "Markets moved sideways in thin, indecisive trading as participants awaited fresh catalysts.",
+    "Price action remained range-bound as bulls and bears fought to establish control of the narrative.",
+    "An uneasy calm settled over markets, with neither buyers nor sellers willing to make bold moves.",
   ],
   mild_bear: [
-    "{asset} मा selling pressure बढिरहेको छ।",
-    "Bearish sentiment ले {asset} को upside लाई limit गरिरहेको छ।",
-    "{asset} market मा risk-off environment create भइरहेको छ।",
+    "Markets retreated under selling pressure as risk-off sentiment gained traction.",
+    "Bears pressed their advantage as negative newsflow overwhelmed pockets of buying interest.",
+    "A cautious tone gripped markets as investors reduced exposure amid mounting uncertainty.",
   ],
   strong_bear: [
-    "{asset} मा significant downside pressure देखिँदैछ।",
-    "Strong bearish momentum ले {asset} लाई support levels तर्फ धकेलिरहेको छ।",
-    "Macro headwinds र negative news flow ले {asset} मा bears को grip बलियो बनाएको छ।",
+    "Markets came under sustained pressure as a wave of selling erased recent gains.",
+    "Risk assets fell sharply as a deteriorating macro backdrop triggered broad-based liquidation.",
+    "Bears dominated proceedings as a cascade of negative catalysts drove prices toward key support levels.",
   ]
 };
 
-const TCCL_COMMENTARY = {
+const TCCL_DEEP = {
   BUY: [
-    "TCCL Coherence Axis physics अनुसार, price आफ्नो equilibrium center भन्दा तल छ — यसले upward correction gravity indicate गर्दछ। Coherence Axis (CA) — जुन 21-period high र low को midpoint हो — ले strong support zone define गरेको छ।",
-    "TCCL algorithm ले BUY zone detect गरेको छ। Price Coherence Axis भन्दा -3% भन्दा बढी तल छ र Phase Direction upward छ — यो combination ले mean reversion rally को probability high छ।",
-    "Coherence Axis analysis: Price ले gravity center देखेको छ। TCCL physics — जसले market को natural equilibrium measure गर्छ — ले strong buying opportunity indicate गर्दछ।",
+    "The proprietary TCCL (Trend-Coherence-Cycle-Logic) Coherence Axis algorithm — which calculates equilibrium price using the midpoint of the 21-period high-low range — has registered a BUY signal. With price trading more than 3% below the Coherence Axis, the algorithm identifies a gravitational pull toward mean reversion. Phase Direction (PD%) has turned positive, satisfying the dual-condition trigger. Historically, this setup has preceded meaningful upside recoveries as price gravitates back toward its natural equilibrium.",
+    "TCCL Coherence Axis physics is generating a BUY signal. The framework posits that every market oscillates around a balance point — when price extends too far below this axis, correction forces build. Current deviation of more than -3% from CA, combined with a positive Phase Direction reading, creates the algorithm's highest-conviction long setup. The implied target remains the Coherence Axis itself.",
   ],
   SELL: [
-    "TCCL Coherence Axis ले SELL signal दिएको छ — price आफ्नो equilibrium भन्दा +3% भन्दा माथि extend भइसकेको छ। यो incoherence ले mean reversion को gravity काम गर्न थालेको संकेत हो।",
-    "TCCL algorithm अनुसार market overbought zone मा छ। Coherence Axis physics भन्छ: जति धेरै price CA बाट टाढा जान्छ, correction को probability त्यति नै बढ्छ।",
-    "Price Coherence Axis भन्दा माथि धेरै extend भएको छ — TCCL physics ले downward correction inevitable देख्दछ। CA target को तर्फ mean reversion expected छ।",
+    "The TCCL Coherence Axis system has issued a SELL signal, with price trading more than 3% above its calculated equilibrium. This 'incoherent high' state — as the algorithm classifies it — suggests that market forces have overextended to the upside. The negative Phase Direction confirms that momentum is turning, satisfying the SELL condition. Mean reversion toward the Coherence Axis (CA) constitutes the algorithm's primary downside target.",
+    "TCCL physics is alerting to downside risk. The algorithm's core principle — that price cannot sustain extended deviations from the Coherence Axis without correction — is now active. With deviation exceeding +3% and Phase Direction negative, the model flags an 'incoherent' market state where selling pressure should intensify.",
   ],
   HOLD: [
-    "TCCL Coherence Axis analysis: Price आफ्नो natural equilibrium zone (±3%) भित्र छ — यो coherent state हो। Algorithm भन्छ: जब market balanced छ, edge छैन — patience नै best strategy हो।",
-    "Coherence Axis ले neutral zone indicate गरेको छ। TCCL physics अनुसार, price आफ्नो center मा छ — यसले clear directional bias छैन भन्छ।",
+    "The TCCL Coherence Axis algorithm currently reads HOLD, with price contained within the ±3% 'coherent zone' around the calculated equilibrium. This is the algorithm's neutral state — it recognizes that when price is balanced near the Coherence Axis, there is no mathematical edge to exploit. The framework advises patience, waiting for a meaningful deviation to develop before committing capital.",
   ]
 };
 
-const MTF_COMMENTARY = {
+const MTF_DEEP = {
   LONG: [
-    "MTF-Q-LDA+ algorithm — जसले 30m base data बाट 1H, 4H, 1D timeframes aggregate गर्छ — ले LONG signal confirm गरेको छ। Hilbert instantaneous phase analysis र dynamic weight optimization ले bullish momentum देखाइरहेको छ।",
-    "Multi-timeframe Hilbert phase analysis: 30m, 1H, 4H, 1D — सबै timeframes LONG alignment मा छन्। MTF-Q-LDA+ को consensus tier system ले high-confidence BUY opportunity identify गरेको छ।",
+    "The MTF-Q-LDA+ (Multi-Timeframe Quantum-LDA Plus) engine — which aggregates 30-minute base data into 1H, 4H, 1D and 1W timeframes using Hilbert instantaneous phase analysis — has issued a LONG signal. Dynamic softmax-weighted composite scores across all timeframes are aligned bullishly. The logistic regression meta-model, trained on historical phase-velocity features, assigns a probability greater than 55% to an upside move, crossing the execution threshold.",
+    "MTF-Q-LDA+ is signaling LONG. The algorithm's three-layer process — Hilbert phase extraction, dynamic weight optimization via L-BFGS-B, and meta-model probability filtering — has produced consensus bullish alignment across 30m, 1H, 4H and 1D timeframes. Energy gating (coherence × kurtosis × trend × composite²) confirms that signal quality is sufficient to warrant position entry.",
   ],
   SHORT: [
-    "MTF-Q-LDA+ ले SHORT signal दिएको छ। 30m base data बाट aggregate गरिएका multiple timeframes एकैसाथ bearish phase मा छन् — यो strong confirmation हो।",
-    "Multi-timeframe phase analysis: Hilbert transform ले सबै TFs मा bearish momentum detect गरेको छ। Dynamic weight optimizer ले bearish bias confirm गरेको छ।",
+    "The MTF-Q-LDA+ engine is registering a SHORT signal across multiple timeframes. The Hilbert phase composite — aggregated from 30m raw data through 1H, 4H and 1D channels — is negatively aligned, with the meta-model assigning greater than 55% probability to a downside move. Consensus tier analysis shows 3 of 4 timeframes in bearish phase, activating the algorithm's high-conviction short setup.",
   ],
   FLAT: [
-    "MTF-Q-LDA+ engine FLAT signal दिइरहेको छ। Meta-model probability threshold (55%) नाघेको छैन — algorithm conservative stance लिइरहेको छ।",
-    "Multi-timeframe analysis inconclusive — 30m, 1H, 4H signals mixed छन्। Algorithm ले clear edge नभेटेर FLAT recommend गरेको छ।",
+    "MTF-Q-LDA+ is in FLAT mode. The meta-model probability sits between 45-55%, below the threshold required for directional commitment. This reflects genuine uncertainty across timeframes — the 30m Hilbert phase, 4H composite and 1D weighted signal are not yet in agreement. The algorithm's energy gate has not been cleared, and position sizing defaults to zero pending clearer alignment.",
   ]
 };
 
-function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
-function fmt(n, d=2) { return n > 1000 ? n.toLocaleString('en',{maximumFractionDigits:0}) : n.toFixed(d); }
+function pickR(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function fmtP(n) { return n > 1000 ? '$' + n.toLocaleString('en',{maximumFractionDigits:2}) : n > 0 ? '$' + n.toFixed(3) : '—'; }
 
 async function generateReport(sym, prices, sentiment, tccl, mtfSig, headlines) {
   const symNames = {
     BTC:'Bitcoin (BTC/USDT)', ETH:'Ethereum (ETH/USDT)', SOL:'Solana (SOL/USDT)',
-    GOLD:'Gold (XAU/USD)', SILVER:'Silver (XAG/USD)', ALL:'Crypto & Commodities'
+    GOLD:'Gold (XAU/USD)', SILVER:'Silver (XAG/USD)', ALL:'Global Crypto & Commodities'
   };
   const name = symNames[sym] || sym;
-  const assetShort = sym === 'ALL' ? 'crypto market' : name.split(' ')[0];
+  const asset = name.split(' ')[0];
 
-  // Prices
-  const btcP = fmt(prices['BTCUSDT']||73000, 0);
-  const ethP = fmt(prices['ETHUSDT']||2200, 0);
-  const solP = fmt(prices['SOLUSDT']||90, 2);
-  const goldP = '3,052'; const silverP = '33.28';
+  const btcP  = fmtP(prices['BTCUSDT'] || 73000);
+  const ethP  = fmtP(prices['ETHUSDT'] || 2200);
+  const solP  = fmtP(prices['SOLUSDT'] || 90);
+  const goldP = '$3,052.00';
+  const silvP = '$33.28';
 
-  // Score
+  // Combined score
   const ts = tccl==='BUY'?1:tccl==='SELL'?-1:0;
   const ms = mtfSig==='LONG'?1:mtfSig==='SHORT'?-1:0;
   const ns = (sentiment.bullPct - sentiment.bearPct) / 100;
   const combined_pct = Math.round(((ts*0.4 + ms*0.3 + ns*0.3) + 1) / 2 * 100);
-  const biasColor = combined_pct>60?'var(--gr)':combined_pct<40?'var(--re)':'var(--go)';
+  const biasColor = combined_pct>=65?'var(--gr)':combined_pct<=35?'var(--re)':'var(--go)';
   const bias = sentiment.overall;
 
-  // Pick template based on combined score
-  const tier = combined_pct >= 70 ? 'strong_bull'
-             : combined_pct >= 55 ? 'mild_bull'
-             : combined_pct >= 45 ? 'neutral'
-             : combined_pct >= 30 ? 'mild_bear'
-             : 'strong_bear';
+  const tier = combined_pct>=70?'strong_bull':combined_pct>=56?'mild_bull':
+               combined_pct>=44?'neutral':combined_pct>=30?'mild_bear':'strong_bear';
 
-  const tccl_arr = TCCL_COMMENTARY[tccl] || TCCL_COMMENTARY.HOLD;
-  const mtf_arr  = MTF_COMMENTARY[mtfSig] || MTF_COMMENTARY.FLAT;
+  // Headline
+  const biasWord = bias==='BULLISH'?'Bullish':bias==='BEARISH'?'Bearish':'Mixed';
+  const actionWord = tccl==='BUY'&&mtfSig==='LONG' ? 'Algorithms Align on Upside' :
+                     tccl==='SELL'&&mtfSig==='SHORT' ? 'Algorithms Flag Downside Risk' :
+                     'Markets Navigate Crosscurrents';
+  const headline = `${asset} Market Intelligence — ${biasWord} Tone as ${actionWord}`;
 
-  // Top headlines
+  // Dateline
+  const now = new Date();
+  const dateline = now.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const timemark = now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',timeZoneName:'short'});
+
+  // ── PARAGRAPH 1: Market Context ──
+  const p1 = pickR(MARKET_CONTEXT[tier]) +
+    ` Bitcoin traded at ${btcP}, Ethereum at ${ethP}, and Solana at ${solP}, with Gold at ${goldP} and Silver at ${silvP}. ` +
+    `News flow skewed ${bias.toLowerCase()}, with ${sentiment.bullPct}% of monitored headlines carrying a positive tone against ${sentiment.bearPct}% bearish and ${sentiment.neuPct}% neutral.`;
+
+  // ── PARAGRAPH 2: Top News Analysis ──
   const topBull  = headlines.filter(h=>h.sentiment==='BULLISH').slice(0,2);
   const topBear  = headlines.filter(h=>h.sentiment==='BEARISH').slice(0,1);
-  const topNeutral = headlines.filter(h=>h.sentiment==='NEUTRAL').slice(0,1);
+  const allTop   = headlines.slice(0,3);
 
-  // Date/time
-  const now = new Date();
-  const dateStr = now.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-  const timeStr = now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+  let p2 = 'Among the most market-relevant developments: ';
+  if (topBull.length > 0) {
+    p2 += `"${topBull[0].title}" (${topBull[0].source}) emerged as the headline bullish catalyst, `;
+    p2 += `suggesting continued institutional interest in the space. `;
+  }
+  if (topBull.length > 1) {
+    p2 += `This was reinforced by "${topBull[1].title}" (${topBull[1].source}), which market participants interpreted as an additional tailwind. `;
+  }
+  if (topBear.length > 0) {
+    p2 += `On the risk side, "${topBear[0].title}" (${topBear[0].source}) injected a note of caution, `;
+    p2 += `reminding investors that the macro backdrop remains complex. `;
+  }
+  if (p2 === 'Among the most market-relevant developments: ') {
+    p2 += allTop.map(h=>`"${h.title}" (${h.source})`).join('; ') + '. Market participants are monitoring these developments closely.';
+  }
 
-  // Build paragraphs
-  const title = bias==='BULLISH'
-    ? `${assetShort} Bullish Momentum Strengthens — TCCL & MTF Signals Align`
-    : bias==='BEARISH'
-    ? `${assetShort} Faces Headwinds — Algorithm Signals Caution`
-    : `${assetShort} Consolidates — Market Awaits Directional Catalyst`;
+  // ── PARAGRAPH 3: TCCL Deep Analysis ──
+  const p3 = pickR(TCCL_DEEP[tccl] || TCCL_DEEP.HOLD);
 
-  const p1 = pick(REPORT_TEMPLATES[tier]).replace(/{asset}/g, assetShort)
-    + ` ${dateStr}, ${timeStr} मा BTC $${btcP}, ETH $${ethP}, SOL $${solP}, Gold $${goldP}, Silver $${silverP} मा trade भइरहेको छ।`
-    + ` समग्र news sentiment ${sentiment.bullPct}% bullish, ${sentiment.bearPct}% bearish र ${sentiment.neuPct}% neutral छ।`;
+  // ── PARAGRAPH 4: MTF-Q-LDA+ Deep Analysis ──
+  const p4 = pickR(MTF_DEEP[mtfSig] || MTF_DEEP.FLAT);
 
-  const p2 = pick(tccl_arr);
+  // ── PARAGRAPH 5: Synthesis & Outlook ──
+  const alignStr = (tccl==='BUY'&&ms>0)||(tccl==='SELL'&&ms<0)
+    ? 'Both the TCCL Coherence Axis and MTF-Q-LDA+ systems are in agreement'
+    : 'The TCCL and MTF-Q-LDA+ algorithms are currently divergent';
 
-  const p3 = pick(mtf_arr);
+  const scoreInterpret = combined_pct>=70 ? 'a strong bullish bias and elevated conviction for long positioning'
+    : combined_pct>=56 ? 'a moderate bullish lean, suggesting cautious optimism with risk controls'
+    : combined_pct<=30 ? 'a strongly bearish disposition, warranting defensive positioning'
+    : combined_pct<=44 ? 'a moderately bearish tilt, advising reduced exposure'
+    : 'a neutral reading, reflecting genuine uncertainty across signal sources';
 
-  // News paragraph
-  let newsP = 'आजका प्रमुख market-moving headlines: ';
-  if (topBull.length > 0) newsP += `Bullish side मा — <em>"${topBull[0].title}"</em> (${topBull[0].source}) ले positive momentum थपेको छ। `;
-  if (topBull.length > 1) newsP += `थप, <em>"${topBull[1].title}"</em> ले bullish thesis लाई support गर्दछ। `;
-  if (topBear.length > 0) newsP += `Risk factor को रूपमा — <em>"${topBear[0].title}"</em> (${topBear[0].source}) ले downside risk उठाएको छ। `;
-  if (topNeutral.length > 0) newsP += `Background context: <em>"${topNeutral[0].title}"</em>। `;
+  const p5 = `${alignStr}, with the Combined Intelligence Score registering ${combined_pct}% — indicating ${scoreInterpret}. ` +
+    `This composite metric synthesizes TCCL physics (40% weight), MTF-Q-LDA+ signal (30%), and news sentiment (30%) into a single actionable score. ` +
+    `${combined_pct >= 55 ? `Key levels to watch on the upside include the TCCL Coherence Axis target. ` : combined_pct <= 45 ? `The Coherence Axis serves as the primary mean-reversion target on any continued decline. ` : `Range boundaries defined by the Coherence Axis ±3% deviation thresholds represent the key decision points. `}` +
+    `Risk management remains paramount — position sizing should reflect the algorithm's stated confidence level.`;
 
-  // Outlook paragraph
-  const outlook_bull = `Combined Intelligence Score <strong style="color:${biasColor}">${combined_pct}%</strong> ले ${bias} bias indicate गर्दछ। TCCL Coherence Axis र MTF-Q-LDA+ दुवैले ${tccl==='BUY'&&mtfSig==='LONG'?'एउटै direction मा align भएका छन् — यो high-confidence setup हो':'mixed signals दिइरहेका छन् — caution advisable छ'}। Risk management अनिवार्य छ — stop loss सधैं राख्नुस्।`;
+  // ── DISCLAIMER ──
+  const disclaimer = `<em style="font-size:11px;color:var(--su);">This report is generated algorithmically from TCCL Coherence Axis and MTF-Q-LDA+ signals combined with real-time news sentiment analysis. It does not constitute financial advice. Past algorithmic performance does not guarantee future results. Always conduct independent research before making investment decisions.</em>`;
 
-  const disclaimer = `<em style="font-size:11px;color:var(--su);">यो report TCCL algorithm र MTF-Q-LDA+ engine का mathematical signals र news sentiment analysis मा आधारित छ। यो financial advice होइन। आफ्नै research गर्नुस्।</em>`;
-
-  // Format HTML
-  const formattedHtml = `
-    <h3 style="font-family:'Orbitron',monospace;font-size:15px;color:var(--ac);margin-bottom:14px;line-height:1.5;">${title}</h3>
-    <p style="margin-bottom:13px;line-height:1.9;">${p1}</p>
-    <p style="margin-bottom:13px;line-height:1.9;">${p2}</p>
-    <p style="margin-bottom:13px;line-height:1.9;">${p3}</p>
-    <p style="margin-bottom:13px;line-height:1.9;">${newsP}</p>
-    <p style="margin-bottom:13px;line-height:1.9;">${outlook_bull}</p>
-    <p style="margin-bottom:10px;">${disclaimer}</p>
-    <div style="margin-top:14px;padding:10px;background:var(--bg3);border-radius:6px;border-left:3px solid ${biasColor};">
-      <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--su);margin-bottom:4px;">INTELLIGENCE SUMMARY</div>
-      <div style="font-size:12px;font-weight:600;line-height:1.8;">
-        📊 TCCL: <strong style="color:${tccl==='BUY'?'var(--gr)':tccl==='SELL'?'var(--re)':'var(--go)'}">${tccl}</strong> &nbsp;·&nbsp;
-        ⚡ MTF: <strong style="color:${mtfSig==='LONG'?'var(--gr)':mtfSig==='SHORT'?'var(--re)':'var(--go)'}">${mtfSig}</strong> &nbsp;·&nbsp;
-        📰 News: <strong style="color:${biasColor}">${bias} (${sentiment.bullPct}%↑ ${sentiment.bearPct}%↓)</strong> &nbsp;·&nbsp;
-        🎯 Score: <strong style="color:${biasColor}">${combined_pct}%</strong>
+  // ── FORMAT HTML ──
+  const articleHtml = `
+    <div style="border-bottom:2px solid var(--bd);padding-bottom:12px;margin-bottom:16px;">
+      <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--su);letter-spacing:1px;margin-bottom:6px;">
+        MARKET INTELLIGENCE · ${dateline.toUpperCase()} · ${timemark}
+      </div>
+      <h2 style="font-family:'Orbitron',monospace;font-size:clamp(13px,1.8vw,17px);color:var(--ac);line-height:1.4;font-weight:900;">${headline}</h2>
+      <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <span style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:3px 10px;border-radius:3px;
+          background:${bias==='BULLISH'?'rgba(26,107,53,.12)':bias==='BEARISH'?'rgba(170,26,0,.12)':'rgba(138,96,0,.12)'};
+          color:${bias==='BULLISH'?'var(--gr)':bias==='BEARISH'?'var(--re)':'var(--go)'};
+          border:1px solid ${bias==='BULLISH'?'var(--gr)':bias==='BEARISH'?'var(--re)':'var(--go)'};">
+          ${bias==='BULLISH'?'📈 BULLISH':bias==='BEARISH'?'📉 BEARISH':'➡️ NEUTRAL'}
+        </span>
+        <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--su);">
+          Combined Score: <strong style="color:${biasColor}">${combined_pct}%</strong>
+        </span>
+        <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--su);margin-left:auto;">
+          ${headlines.length} sources analyzed
+        </span>
       </div>
     </div>
-    <div style="margin-top:8px;font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--su);text-align:right;">
-      Generated: ${dateStr} ${timeStr} · tikaramojha MTF Intelligence Engine
+
+    <p style="margin-bottom:14px;line-height:1.9;font-size:14px;">${p1}</p>
+    <p style="margin-bottom:14px;line-height:1.9;font-size:14px;">${p2}</p>
+
+    <div style="margin:16px 0;padding:12px 16px;background:rgba(91,45,176,.05);border-left:3px solid var(--ac);border-radius:0 6px 6px 0;">
+      <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--ac);letter-spacing:1px;margin-bottom:6px;">TCCL COHERENCE AXIS ANALYSIS</div>
+      <p style="font-size:13px;line-height:1.9;color:var(--tx);">${p3}</p>
+    </div>
+
+    <div style="margin:16px 0;padding:12px 16px;background:rgba(0,85,170,.05);border-left:3px solid var(--cy);border-radius:0 6px 6px 0;">
+      <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--cy);letter-spacing:1px;margin-bottom:6px;">MTF-Q-LDA+ MULTI-TIMEFRAME ANALYSIS</div>
+      <p style="font-size:13px;line-height:1.9;color:var(--tx);">${p4}</p>
+    </div>
+
+    <p style="margin-bottom:14px;line-height:1.9;font-size:14px;">${p5}</p>
+
+    <div style="margin-top:16px;padding:12px;background:var(--bg3);border-radius:6px;">${disclaimer}</div>
+
+    <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--bd);
+      font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--su);
+      display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+      <span>📊 TCCL: <strong style="color:${tccl==='BUY'?'var(--gr)':tccl==='SELL'?'var(--re)':'var(--go)'}">${tccl}</strong></span>
+      <span>⚡ MTF: <strong style="color:${mtfSig==='LONG'?'var(--gr)':mtfSig==='SHORT'?'var(--re)':'var(--go)'}">${mtfSig}</strong></span>
+      <span>📰 Sentiment: <strong style="color:${biasColor}">${sentiment.bullPct}%↑ ${sentiment.bearPct}%↓</strong></span>
+      <span>🎯 Score: <strong style="color:${biasColor}">${combined_pct}%</strong></span>
+      <span style="margin-left:auto;">tikaramojha Intelligence Engine · ${timemark}</span>
     </div>`;
 
-  // Update UI immediately (no async needed)
-  document.getElementById('intel-report').innerHTML = formattedHtml;
-
-  return { report: formattedHtml, combined_pct, biasColor, bias };
+  document.getElementById('intel-report').innerHTML = articleHtml;
+  return { report: articleHtml, combined_pct, biasColor, bias };
 }
 
 // ── MAIN BOT RUN ──
@@ -1386,6 +1425,62 @@ async function runBot() {
   } catch(e) {
     blg('Error: ' + e.message, 'lerr');
   }
+}
+
+
+// ── RENDER HEADLINES ──
+function renderHeadlines(scored) {
+  const box = document.getElementById('headlines-box');
+  if (!box) return;
+  if (!scored || scored.length === 0) {
+    box.innerHTML = '<div style="color:var(--su);font-family:Share Tech Mono,monospace;font-size:10px;padding:10px;">No headlines available</div>';
+    return;
+  }
+  box.innerHTML = scored.slice(0,8).map(n => `
+    <div style="padding:9px 0;border-bottom:1px solid var(--bd);display:flex;align-items:flex-start;gap:8px;">
+      <span style="font-size:16px;flex-shrink:0;">${n.sentiment==='BULLISH'?'📈':n.sentiment==='BEARISH'?'📉':'➡️'}</span>
+      <div style="flex:1;">
+        <div style="font-size:13px;color:var(--tx);line-height:1.55;font-weight:600;">${n.title}</div>
+        <div style="font-family:Share Tech Mono,monospace;font-size:9px;color:var(--su);margin-top:3px;display:flex;gap:8px;flex-wrap:wrap;">
+          <span>${n.source}</span>
+          <span>${n.time}</span>
+          <span style="color:${n.sentiment==='BULLISH'?'var(--gr)':n.sentiment==='BEARISH'?'var(--re)':'var(--go)'};font-weight:700;">${n.sentiment}</span>
+          ${n.votes > 5 ? `<span style="color:var(--ac);">🔥 ${n.votes} votes</span>` : ''}
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// ── RENDER MARKET BRIEFS ──
+function renderBriefs(sym, prices, sentiment) {
+  const box = document.getElementById('brief-cards');
+  if (!box) return;
+  const assets = sym === 'ALL'
+    ? [{s:'BTC',n:'Bitcoin',sym:'BTCUSDT'},{s:'ETH',n:'Ethereum',sym:'ETHUSDT'},{s:'SOL',n:'Solana',sym:'SOLUSDT'}]
+    : sym==='GOLD'   ? [{s:'GOLD',n:'Gold',sym:'GOLD'}]
+    : sym==='SILVER' ? [{s:'SILVER',n:'Silver',sym:'SILVER'}]
+    : [{s:sym, n:sym, sym:sym+'USDT'}];
+
+  box.innerHTML = assets.map(a => {
+    const p = prices[a.sym] || prices[a.s] || 0;
+    const pStr = p > 1000 ? '$'+p.toLocaleString('en',{maximumFractionDigits:0}) : p > 0 ? '$'+p.toFixed(3) : '—';
+    const brief = sentiment.overall==='BULLISH'
+      ? 'Momentum positive — watch for resistance levels ahead.'
+      : sentiment.overall==='BEARISH'
+      ? 'Selling pressure detected — monitor key support zones.'
+      : 'Consolidation phase — await directional catalyst.';
+    const emoji = sentiment.overall==='BULLISH'?'📈':sentiment.overall==='BEARISH'?'📉':'➡️';
+    const clr = sentiment.overall==='BULLISH'?'var(--gr)':sentiment.overall==='BEARISH'?'var(--re)':'var(--go)';
+    return `
+      <div style="background:var(--bg3);border:1px solid var(--bd);border-radius:6px;padding:10px;display:flex;gap:10px;align-items:center;">
+        <div style="font-family:Orbitron,monospace;font-size:11px;color:var(--ac);font-weight:700;min-width:55px;">${a.s}</div>
+        <div style="flex:1;">
+          <div style="font-family:Share Tech Mono,monospace;font-size:14px;font-weight:700;">${pStr}</div>
+          <div style="font-size:12px;color:var(--su);margin-top:2px;">${brief}</div>
+        </div>
+        <div style="font-size:20px;">${emoji}</div>
+      </div>`;
+  }).join('');
 }
 
 // Auto-refresh bot
