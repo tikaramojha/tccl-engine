@@ -1,0 +1,1820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TCCL Market Compass — Proto-Entangled Engine</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@300;400;600;700&family=Orbitron:wght@400;700;900&display=swap');
+
+:root {
+  --bg: #080812;
+  --bg2: #0d0d1a;
+  --bg3: #111128;
+  --accent: #6c3dc8;
+  --cyan: #00e5ff;
+  --gold: #ffd700;
+  --green: #00ff99;
+  --red: #ff4444;
+  --orange: #ff6b35;
+  --purple: #9d4edd;
+  --silver: #c0c0c0;
+  --text: #e8e8ff;
+  --sub: #9999cc;
+  --border: rgba(108,61,200,0.4);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Rajdhani', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Animated grid background */
+body::before {
+  content:'';
+  position:fixed;
+  inset:0;
+  background-image:
+    linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events:none;
+  z-index:0;
+}
+
+.container { position:relative; z-index:1; max-width:1400px; margin:0 auto; padding:20px; }
+
+/* HEADER */
+.header {
+  text-align:center;
+  padding: 30px 20px 20px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 24px;
+  position: relative;
+}
+.header::after {
+  content:'';
+  position:absolute;
+  bottom:-1px; left:50%; transform:translateX(-50%);
+  width:200px; height:2px;
+  background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+}
+.logo {
+  font-family: 'Orbitron', monospace;
+  font-size: clamp(18px, 3vw, 32px);
+  font-weight: 900;
+  color: var(--gold);
+  letter-spacing: 3px;
+  text-shadow: 0 0 30px rgba(255,215,0,0.5);
+}
+.logo span { color: var(--cyan); }
+.subtitle {
+  font-family: 'Share Tech Mono', monospace;
+  color: var(--sub);
+  font-size: 11px;
+  margin-top: 6px;
+  letter-spacing: 2px;
+}
+
+/* TABS */
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.tab {
+  padding: 10px 20px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-bottom: none;
+  color: var(--sub);
+  cursor: pointer;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  transition: all 0.2s;
+  border-radius: 4px 4px 0 0;
+}
+.tab:hover { color: var(--cyan); border-color: var(--border); }
+.tab.active {
+  color: var(--cyan);
+  background: rgba(0,229,255,0.05);
+  border-color: var(--cyan);
+  border-bottom-color: var(--bg);
+  text-shadow: 0 0 10px rgba(0,229,255,0.5);
+}
+
+.panel { display:none; }
+.panel.active { display:block; }
+
+/* CARDS */
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 16px;
+  position: relative;
+  overflow: hidden;
+}
+.card::before {
+  content:'';
+  position:absolute;
+  top:0; left:0; right:0;
+  height:2px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+}
+.card-title {
+  font-family: 'Orbitron', monospace;
+  font-size: 12px;
+  color: var(--gold);
+  letter-spacing: 2px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* GRID LAYOUTS */
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
+.grid-4 { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+@media(max-width:768px) {
+  .grid-2,.grid-3,.grid-4 { grid-template-columns:1fr 1fr; }
+}
+@media(max-width:480px) {
+  .grid-2,.grid-3,.grid-4 { grid-template-columns:1fr; }
+}
+
+/* INPUTS */
+.input-group { margin-bottom: 12px; }
+.input-label {
+  display:block;
+  font-family:'Share Tech Mono',monospace;
+  font-size:11px;
+  color: var(--sub);
+  letter-spacing:1px;
+  margin-bottom:4px;
+}
+.input-field {
+  width:100%;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 10px 14px;
+  color: var(--cyan);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 13px;
+  outline:none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.input-field:focus {
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 2px rgba(0,229,255,0.1), inset 0 0 20px rgba(0,229,255,0.03);
+}
+.input-field::placeholder { color: rgba(153,153,204,0.3); }
+
+/* BUTTONS */
+.btn {
+  padding: 12px 28px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: 'Orbitron', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent), #4a2090);
+  color: white;
+  border: 1px solid rgba(108,61,200,0.6);
+}
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(108,61,200,0.4);
+}
+.btn-cyan {
+  background: transparent;
+  color: var(--cyan);
+  border: 1px solid var(--cyan);
+}
+.btn-cyan:hover {
+  background: rgba(0,229,255,0.1);
+  box-shadow: 0 0 20px rgba(0,229,255,0.2);
+}
+.btn-gold {
+  background: linear-gradient(135deg, #b8860b, #ffd700);
+  color: #0a0a14;
+  border: none;
+}
+.btn-gold:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(255,215,0,0.4);
+}
+
+/* STAT BOXES */
+.stat-box {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 14px;
+  text-align: center;
+}
+.stat-label {
+  font-family:'Share Tech Mono',monospace;
+  font-size:10px;
+  color:var(--sub);
+  letter-spacing:1px;
+  margin-bottom:6px;
+}
+.stat-value {
+  font-family:'Orbitron',monospace;
+  font-size:clamp(14px,2vw,20px);
+  font-weight:700;
+}
+
+/* SIGNAL BADGE */
+.signal-badge {
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding: 8px 20px;
+  border-radius: 4px;
+  font-family:'Orbitron',monospace;
+  font-size:14px;
+  font-weight:700;
+  letter-spacing:2px;
+}
+.signal-buy { background:rgba(0,255,153,0.15); border:1px solid var(--green); color:var(--green); }
+.signal-sell { background:rgba(255,68,68,0.15); border:1px solid var(--red); color:var(--red); }
+.signal-hold { background:rgba(255,215,0,0.1); border:1px solid var(--gold); color:var(--gold); }
+.signal-wait { background:rgba(255,107,53,0.1); border:1px solid var(--orange); color:var(--orange); }
+.signal-conflict { background:rgba(157,78,221,0.15); border:1px solid var(--purple); color:var(--purple); }
+
+/* TABLE */
+.data-table {
+  width:100%;
+  border-collapse:collapse;
+  font-size:13px;
+}
+.data-table th {
+  background: var(--bg3);
+  color: var(--gold);
+  font-family:'Share Tech Mono',monospace;
+  font-size:10px;
+  letter-spacing:1px;
+  padding:10px 12px;
+  text-align:center;
+  border:1px solid var(--border);
+  white-space:nowrap;
+}
+.data-table td {
+  padding:10px 12px;
+  border:1px solid rgba(68,68,119,0.3);
+  text-align:center;
+  font-family:'Share Tech Mono',monospace;
+  font-size:12px;
+  transition: background 0.15s;
+}
+.data-table tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+.data-table tr:hover td { background: rgba(0,229,255,0.04); }
+
+/* CANVAS */
+canvas {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display:block;
+}
+
+/* MANIFEST OUTPUT */
+.manifest-output {
+  background: var(--bg3);
+  border: 1px solid var(--green);
+  border-radius: 6px;
+  padding: 16px;
+  font-family:'Share Tech Mono',monospace;
+  font-size:13px;
+  color: var(--green);
+  line-height:1.8;
+  min-height:60px;
+  box-shadow: inset 0 0 30px rgba(0,255,153,0.03), 0 0 20px rgba(0,255,153,0.05);
+}
+
+/* HASH INPUT special */
+.hash-input-wrap { position:relative; }
+.hash-input-wrap .input-field {
+  border-color: var(--accent);
+  color: var(--cyan);
+  font-size:14px;
+  padding-right:120px;
+}
+.hash-parse-btn {
+  position:absolute; right:6px; top:50%; transform:translateY(-50%);
+  padding:6px 14px;
+  background: var(--accent);
+  color:white;
+  border:none;
+  border-radius:3px;
+  font-family:'Orbitron',monospace;
+  font-size:10px;
+  cursor:pointer;
+  letter-spacing:1px;
+}
+
+/* PROGRESS BAR */
+.progress-bar {
+  height:4px;
+  background:var(--bg3);
+  border-radius:2px;
+  overflow:hidden;
+  margin-top:6px;
+}
+.progress-fill {
+  height:100%;
+  border-radius:2px;
+  transition: width 0.5s ease;
+}
+
+/* GLOW EFFECTS */
+.glow-cyan { text-shadow: 0 0 10px rgba(0,229,255,0.6); }
+.glow-gold { text-shadow: 0 0 10px rgba(255,215,0,0.6); }
+.glow-green { text-shadow: 0 0 10px rgba(0,255,153,0.6); }
+
+/* Row inputs for OHLC table */
+.ohlc-row-input {
+  width:90px;
+  background:var(--bg);
+  border:1px solid var(--border);
+  border-radius:3px;
+  padding:4px 8px;
+  color:var(--cyan);
+  font-family:'Share Tech Mono',monospace;
+  font-size:11px;
+  text-align:center;
+  outline:none;
+}
+.ohlc-row-input:focus { border-color:var(--cyan); }
+
+.add-row-btn {
+  background:transparent;
+  border:1px dashed var(--border);
+  color:var(--sub);
+  padding:8px;
+  width:100%;
+  cursor:pointer;
+  font-family:'Rajdhani',sans-serif;
+  font-size:13px;
+  border-radius:4px;
+  transition:all 0.2s;
+  margin-top:8px;
+}
+.add-row-btn:hover { border-color:var(--cyan); color:var(--cyan); }
+
+.delete-row {
+  background:transparent;
+  border:none;
+  color:var(--red);
+  cursor:pointer;
+  font-size:14px;
+  padding:2px 6px;
+  opacity:0.5;
+  transition:opacity 0.2s;
+}
+.delete-row:hover { opacity:1; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">TCCL <span>MARKET</span> COMPASS</div>
+  <div class="subtitle">⚡ PROTO-ENTANGLED ENGINE · CIRCULAR RH CHART · MANIFEST SYSTEM ⚡</div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('tccl')">🧭 TCCL Engine</button>
+  <button class="tab" onclick="switchTab('rh')">🔵 Circular RH Chart</button>
+  <button class="tab" onclick="switchTab('manifest')">🌌 Manifest Engine</button>
+  <button class="tab" onclick="switchTab('backtest')">📊 Backtest</button>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     PANEL 1 — TCCL ENGINE
+══════════════════════════════════════════════════════════ -->
+<div id="panel-tccl" class="panel active">
+
+  <div class="grid-2">
+    <!-- INPUT -->
+    <div class="card">
+      <div class="card-title">📥 INPUT — OHLC DATA</div>
+
+      <!-- LIVE DATA FETCH ZONE -->
+      <div style="background:var(--bg3);border:1px solid rgba(0,229,255,0.3);border-radius:6px;padding:12px;margin-bottom:14px">
+        <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--cyan);letter-spacing:1px;margin-bottom:8px">
+          🌐 LIVE DATA — Binance API (Free, No Key Needed)
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+          <div style="flex:1;min-width:120px">
+            <div class="input-label">SYMBOL</div>
+            <select class="input-field" id="live-symbol" style="border-color:rgba(0,229,255,0.4)">
+              <optgroup label="── CRYPTO ──">
+                <option value="BTCUSDT">BTC/USDT</option>
+                <option value="ETHUSDT">ETH/USDT</option>
+                <option value="SOLUSDT">SOL/USDT</option>
+                <option value="BNBUSDT">BNB/USDT</option>
+                <option value="XRPUSDT">XRP/USDT</option>
+                <option value="ADAUSDT">ADA/USDT</option>
+                <option value="DOGEUSDT">DOGE/USDT</option>
+                <option value="AVAXUSDT">AVAX/USDT</option>
+              </optgroup>
+              <optgroup label="── CUSTOM ──">
+                <option value="custom">Custom symbol...</option>
+              </optgroup>
+            </select>
+          </div>
+          <div style="flex:1;min-width:80px" id="custom-sym-wrap" style="display:none">
+            <div class="input-label">CUSTOM</div>
+            <input class="input-field" id="custom-symbol" placeholder="e.g. LTCUSDT" style="border-color:var(--gold)">
+          </div>
+          <div style="flex:1;min-width:80px">
+            <div class="input-label">INTERVAL</div>
+            <select class="input-field" id="live-interval" style="border-color:rgba(0,229,255,0.4)">
+              <option value="1h">1h</option>
+              <option value="4h" selected>4h</option>
+              <option value="1d">1D</option>
+              <option value="1w">1W</option>
+              <option value="15m">15m</option>
+            </select>
+          </div>
+          <div style="flex:1;min-width:80px">
+            <div class="input-label">PERIODS</div>
+            <select class="input-field" id="live-periods" style="border-color:rgba(0,229,255,0.4)">
+              <option value="21" selected>21</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+          </div>
+          <button class="btn btn-cyan" onclick="fetchLiveData()" id="fetch-btn" style="height:40px;padding:0 16px;font-size:11px">
+            🌐 FETCH LIVE
+          </button>
+          <button class="btn" onclick="toggleAutoRefresh()" style="height:40px;padding:0 12px;font-size:10px;background:transparent;border:1px solid var(--gold);color:var(--gold);cursor:pointer;border-radius:4px;font-family:'Orbitron',monospace">
+            🔄 AUTO
+          </button>
+        </div>
+        <div id="live-status" style="margin-top:8px;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--sub);min-height:18px">
+          ← Symbol छानेर FETCH LIVE थिच्नुस्
+        </div>
+        <!-- Live price ticker -->
+        <div id="live-ticker" style="display:none;margin-top:8px;padding:8px;background:rgba(0,0,0,0.3);border-radius:4px;display:none">
+          <div style="display:flex;gap:16px;flex-wrap:wrap">
+            <span style="font-family:'Orbitron',monospace;font-size:11px;color:var(--gold)" id="tick-sym">—</span>
+            <span style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--cyan)" id="tick-price">—</span>
+            <span style="font-family:'Share Tech Mono',monospace;font-size:11px" id="tick-chg">—</span>
+            <span style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--sub)" id="tick-time">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- MANUAL INPUT (auto-filled by live fetch) -->
+      <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--sub);letter-spacing:1px;margin-bottom:8px">
+        ✏️ MANUAL INPUT (या Live fetch पछि auto-fill हुन्छ)
+      </div>
+      <div class="grid-2">
+        <div class="input-group">
+          <label class="input-label">SYMBOL (manual)</label>
+          <input class="input-field" id="t-symbol" placeholder="BTCUSDT" value="BTCUSDT">
+        </div>
+        <div class="input-group">
+          <label class="input-label">TIMEFRAME</label>
+          <select class="input-field" id="t-tf">
+            <option>1h</option><option selected>4h</option>
+            <option>1D</option><option>1W</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid-3">
+        <div class="input-group">
+          <label class="input-label">HIGH (21-period)</label>
+          <input class="input-field" id="t-high" placeholder="88000" type="number">
+        </div>
+        <div class="input-group">
+          <label class="input-label">LOW (21-period)</label>
+          <input class="input-field" id="t-low" placeholder="80500" type="number">
+        </div>
+        <div class="input-group">
+          <label class="input-label">CLOSE (Today P)</label>
+          <input class="input-field" id="t-close" placeholder="85800" type="number">
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="input-group">
+          <label class="input-label">PREV CLOSE (Yesterday)</label>
+          <input class="input-field" id="t-prev" placeholder="84600" type="number">
+        </div>
+        <div class="input-group">
+          <label class="input-label">INTENT (your view)</label>
+          <select class="input-field" id="t-intent">
+            <option>BUY</option><option>SELL</option><option>HOLD</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn btn-primary" style="flex:2" onclick="runTCCL()">⚡ CALCULATE TCCL SIGNAL</button>
+        <button class="btn btn-cyan" style="flex:1;font-size:10px" onclick="fetchAndRun()">🌐 FETCH + CALC</button>
+      </div>
+    </div>
+
+    <!-- RESULTS -->
+    <div class="card">
+      <div class="card-title">📊 TCCL RESULTS</div>
+      <div class="grid-2" style="margin-bottom:14px">
+        <div class="stat-box">
+          <div class="stat-label">COHERENCE AXIS (CA)</div>
+          <div class="stat-value glow-gold" id="r-ca" style="color:var(--gold)">—</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">DEVIATION D%</div>
+          <div class="stat-value" id="r-dev" style="color:var(--orange)">—</div>
+          <div class="progress-bar"><div class="progress-fill" id="r-dev-bar" style="width:50%;background:var(--orange)"></div></div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">PHASE DIRECTION PD%</div>
+          <div class="stat-value" id="r-pd" style="color:var(--green)">—</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">ZONE</div>
+          <div class="stat-value" id="r-zone" style="color:var(--cyan);font-size:13px">—</div>
+        </div>
+      </div>
+
+      <div style="text-align:center;margin-bottom:14px">
+        <div id="r-signal" class="signal-badge signal-hold" style="display:inline-flex;font-size:18px">
+          — AWAITING INPUT —
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <div class="stat-box">
+          <div class="stat-label">TARGET (CA)</div>
+          <div class="stat-value glow-green" id="r-target" style="color:var(--green);font-size:16px">—</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">STOP LOSS</div>
+          <div class="stat-value" id="r-sl" style="color:var(--red);font-size:16px">—</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">CONFIDENCE</div>
+          <div class="stat-value" id="r-conf" style="color:var(--purple);font-size:16px">—</div>
+        </div>
+      </div>
+
+      <div style="margin-top:14px">
+        <div class="stat-label" style="margin-bottom:6px">INTENT vs PHYSICS CHECK</div>
+        <div class="manifest-output" id="r-conflict" style="font-size:12px;min-height:40px">
+          ← Calculate to see conflict analysis
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MULTI-ROW TABLE -->
+  <div class="card">
+    <div class="card-title">📋 MULTI-ROW ANALYSIS — Paste multiple candles</div>
+    <div style="overflow-x:auto">
+      <table class="data-table" id="ohlc-table">
+        <thead>
+          <tr>
+            <th>DATE / LABEL</th>
+            <th>OPEN</th><th>HIGH</th><th>LOW</th><th>CLOSE</th>
+            <th>CA</th><th>D%</th><th>PD%</th>
+            <th>SIGNAL</th><th>TARGET</th><th>SL</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="ohlc-tbody">
+          <tr>
+            <td><input class="ohlc-row-input" placeholder="2026-03-15" style="width:110px"></td>
+            <td><input class="ohlc-row-input" placeholder="84200"></td>
+            <td><input class="ohlc-row-input" placeholder="88000"></td>
+            <td><input class="ohlc-row-input" placeholder="80500"></td>
+            <td><input class="ohlc-row-input" placeholder="85800"></td>
+            <td class="calc-ca" style="color:var(--gold)">—</td>
+            <td class="calc-dev" style="color:var(--orange)">—</td>
+            <td class="calc-pd" style="color:var(--green)">—</td>
+            <td class="calc-sig">—</td>
+            <td class="calc-tgt" style="color:var(--green)">—</td>
+            <td class="calc-sl" style="color:var(--red)">—</td>
+            <td><button class="delete-row" onclick="deleteRow(this)">✕</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <button class="add-row-btn" onclick="addRow()">+ Add Row</button>
+
+    <div style="display:flex;align-items:center;gap:8px;margin-top:10px;padding:8px 12px;background:var(--bg3);border-radius:4px;border:1px solid var(--border)">
+      <span style="font-size:14px">💾</span>
+      <span id="storage-status" style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--sub)">💾 Data auto-saves to browser storage</span>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+      <button class="btn btn-cyan" onclick="calcAllRows()">⚙ Calculate All</button>
+      <button class="btn btn-primary" onclick="saveRowsToStorage()">💾 Save Now</button>
+      <button class="btn btn-gold" onclick="exportToExcel()">📥 Export to Excel</button>
+      <button class="btn" style="background:transparent;border:1px solid var(--red);color:var(--red);font-family:'Orbitron',monospace;font-size:11px;padding:10px 16px;cursor:pointer;border-radius:4px" onclick="clearStorage()">🗑 Clear</button>
+    </div>
+    <div id="export-msg" style="display:none;margin-top:8px;padding:8px 12px;background:rgba(0,255,153,0.1);border:1px solid var(--green);border-radius:4px;font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--green)"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     PANEL 2 — CIRCULAR RH CHART
+══════════════════════════════════════════════════════════ -->
+<div id="panel-rh" class="panel">
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">📥 OHLC DATA FOR RH CHART</div>
+      <p style="color:var(--sub);font-size:12px;margin-bottom:12px;font-family:'Share Tech Mono',monospace">
+        Paste comma-separated OHLC rows: Open,High,Low,Close (one per line)
+      </p>
+      <textarea class="input-field" id="rh-data" rows="10" placeholder="84200,88000,80500,85800
+85800,86500,84200,85200
+85200,87200,84800,86700
+86700,88500,85900,87100
+87100,89200,86500,88300
+88300,87800,85200,85900
+85900,86200,83800,84100
+84100,85500,82900,84800
+84800,87000,84200,86200
+86200,88100,85800,87500
+87500,89500,87000,88800
+88800,90200,87500,89100
+89100,88500,85900,86300
+86300,87800,85100,87200
+87200,89000,86800,88500" style="resize:vertical;line-height:1.8"></textarea>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="drawRHChart()">🔵 DRAW CIRCULAR CHART</button>
+        <button class="btn btn-cyan" onclick="loadSampleRH()">Load Sample Data</button>
+      </div>
+      <!-- RH Stats -->
+      <div class="grid-2" style="margin-top:14px" id="rh-stats" style="display:none">
+        <div class="stat-box">
+          <div class="stat-label">TREND HAND ANGLE</div>
+          <div class="stat-value glow-gold" id="rh-angle" style="color:var(--gold)">—</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">AVG COHERENCE</div>
+          <div class="stat-value" id="rh-coh" style="color:var(--purple)">—</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">BULLISH BARS</div>
+          <div class="stat-value" id="rh-bull" style="color:var(--green)">—</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">BEARISH BARS</div>
+          <div class="stat-value" id="rh-bear" style="color:var(--red)">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="display:flex;flex-direction:column;align-items:center">
+      <div class="card-title" style="width:100%">🔵 CIRCULAR RH CANDLESTICK CHART</div>
+      <canvas id="rh-canvas" width="500" height="500" style="max-width:100%;max-height:500px"></canvas>
+      <div style="margin-top:10px;display:flex;gap:16px;flex-wrap:wrap;justify-content:center">
+        <span style="font-size:11px;color:var(--green);font-family:'Share Tech Mono',monospace">● HIGH</span>
+        <span style="font-size:11px;color:var(--red);font-family:'Share Tech Mono',monospace">● LOW</span>
+        <span style="font-size:11px;color:var(--cyan);font-family:'Share Tech Mono',monospace">● CLOSE</span>
+        <span style="font-size:11px;color:rgba(100,149,237,0.8);font-family:'Share Tech Mono',monospace">● OPEN</span>
+        <span style="font-size:11px;color:var(--gold);font-family:'Share Tech Mono',monospace">→ TREND HAND</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     PANEL 3 — MANIFEST ENGINE
+══════════════════════════════════════════════════════════ -->
+<div id="panel-manifest" class="panel">
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">🌌 HASH SEED INPUT</div>
+      <div class="input-group">
+        <label class="input-label">PASTE YOUR HASH SEED</label>
+        <div class="hash-input-wrap">
+          <input class="input-field" id="m-hash"
+            placeholder="#UniSeed_v2:TRADE:BTCUSDT:4h:BUY"
+            value="#UniSeed_v2:TRADE:BTCUSDT:4h:BUY">
+          <button class="hash-parse-btn" onclick="parseHash()">PARSE</button>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-bottom:12px" id="parsed-fields">
+        <div class="stat-box"><div class="stat-label">DOMAIN</div>
+          <div class="stat-value" id="m-domain" style="color:var(--cyan);font-size:16px">—</div></div>
+        <div class="stat-box"><div class="stat-label">PAIR / SUBJECT</div>
+          <div class="stat-value" id="m-pair" style="color:var(--green);font-size:16px">—</div></div>
+        <div class="stat-box"><div class="stat-label">HORIZON / TF</div>
+          <div class="stat-value" id="m-tf" style="color:var(--gold);font-size:16px">—</div></div>
+        <div class="stat-box"><div class="stat-label">INTENT</div>
+          <div class="stat-value" id="m-intent" style="color:var(--orange);font-size:16px">—</div></div>
+      </div>
+
+      <div class="card-title" style="margin-top:8px">📊 TCCL PHYSICS CHECK</div>
+      <div class="grid-3">
+        <div class="input-group">
+          <label class="input-label">CLOSE PRICE</label>
+          <input class="input-field" id="m-close" placeholder="85800" type="number">
+        </div>
+        <div class="input-group">
+          <label class="input-label">H21</label>
+          <input class="input-field" id="m-h21" placeholder="88000" type="number">
+        </div>
+        <div class="input-group">
+          <label class="input-label">L21</label>
+          <input class="input-field" id="m-l21" placeholder="80500" type="number">
+        </div>
+      </div>
+      <button class="btn btn-primary" style="width:100%" onclick="runManifest()">
+        🌌 GENERATE MANIFEST
+      </button>
+
+      <div style="margin-top:14px">
+        <div class="card-title">📋 QUICK HASH EXAMPLES</div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <button class="add-row-btn" onclick="setHash('#UniSeed_v2:TRADE:BTCUSDT:4h:BUY')">#UniSeed_v2:TRADE:BTCUSDT:4h:BUY</button>
+          <button class="add-row-btn" onclick="setHash('#UniSeed_v2:TRADE:SOLUSDT:1h:SELL')">#UniSeed_v2:TRADE:SOLUSDT:1h:SELL</button>
+          <button class="add-row-btn" onclick="setHash('#UniSeed_v2:HEALTH:FATIGUE:HIGH:REST')">#UniSeed_v2:HEALTH:FATIGUE:HIGH:REST</button>
+          <button class="add-row-btn" onclick="setHash('#UniSeed_v2:PLAN:DAILY:08:00:FOCUS')">#UniSeed_v2:PLAN:DAILY:08:00:FOCUS</button>
+          <button class="add-row-btn" onclick="setHash('#UniSeed_v2:CITY:WATER:ZONE3:ALLOC')">#UniSeed_v2:CITY:WATER:ZONE3:ALLOC</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">✅ MANIFEST OUTPUT</div>
+      <div class="manifest-output" id="manifest-out" style="min-height:120px;font-size:13px;line-height:2">
+        ← Hash paste गरेर GENERATE थिच्नुस्
+      </div>
+
+      <div style="margin-top:16px">
+        <div class="grid-3">
+          <div class="stat-box">
+            <div class="stat-label">TCCL SIGNAL</div>
+            <div class="stat-value" id="m-tccl-sig" style="color:var(--cyan);font-size:14px">—</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">TARGET (CA)</div>
+            <div class="stat-value glow-green" id="m-tgt" style="color:var(--green);font-size:14px">—</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">STOP LOSS</div>
+            <div class="stat-value" id="m-sl" style="color:var(--red);font-size:14px">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:16px">
+        <div class="stat-label" style="margin-bottom:6px">CONFLICT DETECTION</div>
+        <div id="m-conflict-badge" class="signal-badge signal-hold" style="width:100%;justify-content:center;font-size:13px">
+          AWAITING INPUT
+        </div>
+      </div>
+
+      <div style="margin-top:16px">
+        <div class="card-title">📜 MANIFEST LOG</div>
+        <div id="manifest-log" style="max-height:200px;overflow-y:auto;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--sub)">
+          — log empty —
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     PANEL 4 — BACKTEST
+══════════════════════════════════════════════════════════ -->
+<div id="panel-backtest" class="panel">
+  <div class="card">
+    <div class="card-title">⚙️ BACKTEST CONFIGURATION</div>
+    <div class="grid-4">
+      <div class="input-group">
+        <label class="input-label">INITIAL CAPITAL ($)</label>
+        <input class="input-field" id="bt-capital" value="1000" type="number">
+      </div>
+      <div class="input-group">
+        <label class="input-label">PROFIT WITHDRAW %</label>
+        <input class="input-field" id="bt-withdraw" value="50" type="number" min="0" max="100">
+      </div>
+      <div class="input-group">
+        <label class="input-label">ASSET</label>
+        <input class="input-field" id="bt-asset" value="Silver (XAG/USD)">
+      </div>
+      <div class="input-group">
+        <label class="input-label">STRATEGY</label>
+        <select class="input-field" id="bt-strategy">
+          <option value="hold">TCCL Buy & Hold</option>
+          <option value="swing">TCCL Swing (High/Low)</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Silver Data Pre-loaded -->
+  <div class="card">
+    <div class="card-title">🥈 SILVER HISTORICAL DATA — Sep 2024 → Feb 2025</div>
+    <div style="overflow-x:auto">
+      <table class="data-table" id="bt-table">
+        <thead>
+          <tr>
+            <th>MONTH</th><th>OPEN</th><th>HIGH</th><th>LOW</th><th>CLOSE</th>
+            <th>CA</th><th>D%</th><th>SIGNAL</th>
+            <th>oz HELD</th><th>PORTFOLIO $</th><th>PROFIT $</th>
+            <th>WITHDRAWN $</th><th>SAVED $</th><th>TOTAL SAVED $</th>
+          </tr>
+        </thead>
+        <tbody id="bt-tbody"></tbody>
+      </table>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+      <button class="btn btn-gold" onclick="runBacktest()">📊 RUN BACKTEST</button>
+      <button class="btn btn-cyan" onclick="exportBacktestToExcel()">📥 Export to Excel</button>
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div class="card" id="bt-summary" style="display:none">
+    <div class="card-title">🎯 BACKTEST RESULTS</div>
+    <div class="grid-4" id="bt-results"></div>
+    <div style="margin-top:16px" id="bt-conclusion"></div>
+  </div>
+</div>
+
+</div><!-- /container -->
+
+<script>
+// ══════════════════════════════════════════════════════════
+// TAB SWITCHING
+// ══════════════════════════════════════════════════════════
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('panel-'+name).classList.add('active');
+  if(name==='rh') setTimeout(()=>drawRHChart(),100);
+  if(name==='backtest') setTimeout(()=>runBacktest(),100);
+}
+
+// ══════════════════════════════════════════════════════════
+// TCCL ENGINE
+// ══════════════════════════════════════════════════════════
+function runTCCL() {
+  const H = parseFloat(document.getElementById('t-high').value)||0;
+  const L = parseFloat(document.getElementById('t-low').value)||0;
+  const P = parseFloat(document.getElementById('t-close').value)||0;
+  const prev = parseFloat(document.getElementById('t-prev').value)||0;
+  const intent = document.getElementById('t-intent').value;
+  const sym = document.getElementById('t-symbol').value||'ASSET';
+
+  if(!H||!L||!P){alert('HIGH, LOW, CLOSE values हाल्नुस्!'); return;}
+
+  const CA = (H+L)/2;
+  const D = (P-CA)/CA*100;
+  const PD = prev>0 ? (P-prev)/prev*100 : null;
+
+  let signal, sigClass, sigEmoji;
+  if(PD!==null){
+    if(D>3&&PD<0){signal='SELL'; sigClass='signal-sell'; sigEmoji='🔴';}
+    else if(D<-3&&PD>0){signal='BUY'; sigClass='signal-buy'; sigEmoji='🟢';}
+    else if(Math.abs(D)<=3){signal='HOLD'; sigClass='signal-hold'; sigEmoji='🟡';}
+    else{signal='WAIT'; sigClass='signal-wait'; sigEmoji='⏳';}
+  } else {
+    signal=Math.abs(D)<=3?'HOLD':(D>3?'SELL ZONE':'BUY ZONE');
+    sigClass=D>3?'signal-sell':(D<-3?'signal-buy':'signal-hold');
+    sigEmoji=D>3?'🔴':(D<-3?'🟢':'🟡');
+  }
+
+  const target = CA;
+  const sl = signal==='BUY'? CA*0.98 : signal==='SELL'? CA*1.02 : null;
+  const conf = Math.abs(D)>3 ? Math.min(95, 70+Math.abs(D)*3) : 50;
+
+  // Conflict check
+  let conflict, cClass;
+  if(intent==='BUY'&&signal==='BUY'){conflict='✅ CONFIRMED — Intent matches TCCL Physics'; cClass='signal-buy';}
+  else if(intent==='SELL'&&signal==='SELL'){conflict='✅ CONFIRMED — Intent matches TCCL Physics'; cClass='signal-buy';}
+  else if(intent==='BUY'&&signal==='SELL'){conflict='⚠ CONFLICT! Intent=BUY but Physics=SELL — DO NOT TRADE'; cClass='signal-conflict';}
+  else if(intent==='SELL'&&signal==='BUY'){conflict='⚠ CONFLICT! Intent=SELL but Physics=BUY — DO NOT TRADE'; cClass='signal-conflict';}
+  else{conflict='🟡 COHERENT ZONE — No strong signal yet'; cClass='signal-hold';}
+
+  // Update UI
+  document.getElementById('r-ca').textContent = CA.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const devEl=document.getElementById('r-dev');
+  devEl.textContent = (D>0?'+':'')+D.toFixed(2)+'%';
+  devEl.style.color = D>3?'var(--red)':(D<-3?'var(--green)':'var(--orange)');
+  const barW = Math.min(100, Math.abs(D)/10*100);
+  const bar=document.getElementById('r-dev-bar');
+  bar.style.width=barW+'%';
+  bar.style.background=D>3?'var(--red)':(D<-3?'var(--green)':'var(--orange)');
+
+  const pdEl=document.getElementById('r-pd');
+  pdEl.textContent = PD!==null? (PD>0?'+':'')+PD.toFixed(2)+'%' : 'N/A (no prev)';
+  pdEl.style.color = PD>0?'var(--green)':'var(--red)';
+
+  const zoneEl=document.getElementById('r-zone');
+  if(D>3){zoneEl.textContent='⬆ INCOHERENT HIGH'; zoneEl.style.color='var(--red)';}
+  else if(D<-3){zoneEl.textContent='⬇ INCOHERENT LOW'; zoneEl.style.color='var(--green)';}
+  else{zoneEl.textContent='✅ COHERENT ZONE'; zoneEl.style.color='var(--cyan)';}
+
+  const sigEl=document.getElementById('r-signal');
+  sigEl.textContent=sigEmoji+' '+signal;
+  sigEl.className='signal-badge '+sigClass;
+  sigEl.style.fontSize='20px';
+
+  document.getElementById('r-target').textContent='$'+CA.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2});
+  document.getElementById('r-sl').textContent=sl?'$'+sl.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2}):'—';
+  document.getElementById('r-conf').textContent=Math.round(conf)+'%';
+
+  const cfEl=document.getElementById('r-conflict');
+  cfEl.textContent=conflict;
+  cfEl.className='manifest-output '+cClass;
+  cfEl.style.minHeight='40px';
+  cfEl.style.display='flex';
+  cfEl.style.alignItems='center';
+  if(cClass==='signal-buy'){cfEl.style.borderColor='var(--green)';cfEl.style.color='var(--green)';}
+  else if(cClass==='signal-sell'||cClass==='signal-conflict'){cfEl.style.borderColor='var(--red)';cfEl.style.color='var(--red)';}
+  else{cfEl.style.borderColor='var(--gold)';cfEl.style.color='var(--gold)';}
+}
+
+// Multi-row table
+function addRow(){
+  const tbody=document.getElementById('ohlc-tbody');
+  const tr=document.createElement('tr');
+  tr.innerHTML=`
+    <td><input class="ohlc-row-input" placeholder="date" style="width:110px"></td>
+    <td><input class="ohlc-row-input" placeholder="open"></td>
+    <td><input class="ohlc-row-input" placeholder="high"></td>
+    <td><input class="ohlc-row-input" placeholder="low"></td>
+    <td><input class="ohlc-row-input" placeholder="close"></td>
+    <td class="calc-ca" style="color:var(--gold)">—</td>
+    <td class="calc-dev" style="color:var(--orange)">—</td>
+    <td class="calc-pd" style="color:var(--green)">—</td>
+    <td class="calc-sig">—</td>
+    <td class="calc-tgt" style="color:var(--green)">—</td>
+    <td class="calc-sl" style="color:var(--red)">—</td>
+    <td><button class="delete-row" onclick="deleteRow(this)">✕</button></td>`;
+  tbody.appendChild(tr);
+}
+function deleteRow(btn){ btn.closest('tr').remove(); }
+function clearTable(){
+  document.getElementById('ohlc-tbody').innerHTML='';
+  addRow();
+}
+function calcAllRows(){
+  const rows=document.querySelectorAll('#ohlc-tbody tr');
+  let prevClose=null;
+  rows.forEach((row,idx)=>{
+    const inputs=row.querySelectorAll('.ohlc-row-input');
+    const O=parseFloat(inputs[1]?.value)||0;
+    const H=parseFloat(inputs[2]?.value)||0;
+    const Lv=parseFloat(inputs[3]?.value)||0;
+    const C=parseFloat(inputs[4]?.value)||0;
+    if(!H||!Lv||!C){prevClose=C||null;return;}
+    const CA=(H+Lv)/2;
+    const D=(C-CA)/CA*100;
+    const PD=prevClose?((C-prevClose)/prevClose*100):null;
+    let sig,sc;
+    if(PD!==null){
+      if(D>3&&PD<0){sig='🔴 SELL';sc='var(--red)';}
+      else if(D<-3&&PD>0){sig='🟢 BUY';sc='var(--green)';}
+      else if(Math.abs(D)<=3){sig='🟡 HOLD';sc='var(--gold)';}
+      else{sig='⏳ WAIT';sc='var(--orange)';}
+    } else {
+      sig=D>3?'🔴 ZONE':(D<-3?'🟢 ZONE':'🟡 HOLD');
+      sc=D>3?'var(--red)':(D<-3?'var(--green)':'var(--gold)');
+    }
+    const tgt=CA;
+    const sl=sig.includes('BUY')?CA*0.98:sig.includes('SELL')?CA*1.02:null;
+    row.querySelector('.calc-ca').textContent=CA.toFixed(2);
+    const dEl=row.querySelector('.calc-dev');
+    dEl.textContent=(D>0?'+':'')+D.toFixed(2)+'%';
+    dEl.style.color=D>3?'var(--red)':(D<-3?'var(--green)':'var(--orange)');
+    const pdEl=row.querySelector('.calc-pd');
+    pdEl.textContent=PD!==null?(PD>0?'+':'')+PD.toFixed(2)+'%':'—';
+    pdEl.style.color=PD>0?'var(--green)':'var(--red)';
+    const sigEl=row.querySelector('.calc-sig');
+    sigEl.textContent=sig; sigEl.style.color=sc;
+    row.querySelector('.calc-tgt').textContent=tgt.toFixed(2);
+    row.querySelector('.calc-sl').textContent=sl?sl.toFixed(2):'—';
+    prevClose=C;
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+// CIRCULAR RH CHART
+// ══════════════════════════════════════════════════════════
+function loadSampleRH(){
+  document.getElementById('rh-data').value=`84200,88000,80500,85800
+85800,86500,84200,85200
+85200,87200,84800,86700
+86700,88500,85900,87100
+87100,89200,86500,88300
+88300,87800,85200,85900
+85900,86200,83800,84100
+84100,85500,82900,84800
+84800,87000,84200,86200
+86200,88100,85800,87500
+87500,89500,87000,88800
+88800,90200,87500,89100
+89100,88500,85900,86300
+86300,87800,85100,87200
+87200,89000,86800,88500
+88500,91000,88000,90200
+90200,92500,89500,91800
+91800,90800,88500,89200
+89200,90500,87800,89800
+89800,91500,89200,90800`;
+  drawRHChart();
+}
+
+function drawRHChart(){
+  const raw=document.getElementById('rh-data').value.trim();
+  if(!raw){loadSampleRH();return;}
+  const lines=raw.split('\n').map(l=>l.trim()).filter(l=>l);
+  const data=lines.map(l=>{
+    const p=l.split(',').map(Number);
+    return{O:p[0],H:p[1],L:p[2],C:p[3]};
+  }).filter(d=>d.O&&d.H&&d.L&&d.C);
+  if(data.length<2){alert('कम से कम 2 rows चाहिन्छ!');return;}
+
+  const canvas=document.getElementById('rh-canvas');
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width, H_c=canvas.height;
+  const cx=W/2, cy=H_c/2;
+
+  ctx.fillStyle='#080814';
+  ctx.fillRect(0,0,W,H_c);
+
+  // Grid circles
+  const gridR=[80,120,160,200,240];
+  gridR.forEach(r=>{
+    ctx.beginPath();
+    ctx.arc(cx,cy,r,0,Math.PI*2);
+    ctx.strokeStyle='rgba(0,229,255,0.06)';
+    ctx.lineWidth=1;
+    ctx.stroke();
+  });
+  // Grid lines (spokes)
+  for(let a=0;a<360;a+=30){
+    const rad=a*Math.PI/180;
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.lineTo(cx+250*Math.cos(rad),cy+250*Math.sin(rad));
+    ctx.strokeStyle='rgba(0,229,255,0.04)';
+    ctx.stroke();
+  }
+
+  const pAll=[...data.map(d=>d.H),...data.map(d=>d.L)];
+  const pMin=Math.min(...pAll), pMax=Math.max(...pAll);
+  const rMin=60, rMax=230;
+  const scale=v=>rMin+(v-pMin)/(pMax-pMin||1)*(rMax-rMin);
+  const n=data.length;
+
+  // Draw series
+  const series=[
+    {key:'O',color:'rgba(100,149,237,0.7)',w:1},
+    {key:'H',color:'rgba(0,255,153,0.85)',w:1.5},
+    {key:'L',color:'rgba(255,68,68,0.85)',w:1.5},
+    {key:'C',color:'rgba(0,229,255,1)',w:2.5},
+  ];
+  series.forEach(s=>{
+    ctx.beginPath();
+    data.forEach((d,i)=>{
+      const ang=(i/(n-1||1))*Math.PI*2-Math.PI/2;
+      const r=scale(d[s.key]);
+      const x=cx+r*Math.cos(ang), y=cy+r*Math.sin(ang);
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    });
+    ctx.strokeStyle=s.color;
+    ctx.lineWidth=s.w;
+    ctx.stroke();
+    // Close the loop
+    ctx.beginPath();
+    const ang0=(0/(n-1||1))*Math.PI*2-Math.PI/2;
+    const angN=((n-1)/(n-1||1))*Math.PI*2-Math.PI/2;
+    const r0=scale(data[0][s.key]);
+    const rN=scale(data[n-1][s.key]);
+    ctx.moveTo(cx+rN*Math.cos(angN),cy+rN*Math.sin(angN));
+    ctx.lineTo(cx+r0*Math.cos(ang0),cy+r0*Math.sin(ang0));
+    ctx.strokeStyle=s.color+'33';
+    ctx.lineWidth=0.5;
+    ctx.stroke();
+  });
+
+  // Bull/Bear dots on close
+  data.forEach((d,i)=>{
+    const ang=(i/(n-1||1))*Math.PI*2-Math.PI/2;
+    const r=scale(d.C);
+    const x=cx+r*Math.cos(ang), y=cy+r*Math.sin(ang);
+    ctx.beginPath();
+    ctx.arc(x,y,3,0,Math.PI*2);
+    ctx.fillStyle=d.C>=d.O?'rgba(0,255,153,0.9)':'rgba(255,68,68,0.9)';
+    ctx.fill();
+  });
+
+  // Coherence & Trend Hand
+  const Nw=Math.min(10,n);
+  let angleSum=0, cohSum=0;
+  const dPcts=data.map((d,i)=>(d.C/d.O-1)*100);
+  const maxDP=Math.max(...dPcts.map(Math.abs))||1;
+  for(let i=n-Nw;i<n;i++){
+    const ang=(i/(n-1||1))*Math.PI*2;
+    angleSum+=ang;
+    cohSum+=1-Math.exp(-Math.abs(dPcts[i])/maxDP);
+  }
+  const avgAng=angleSum/Nw;
+  const avgCoh=cohSum/Nw;
+  const handLen=avgCoh*200;
+  ctx.beginPath();
+  ctx.moveTo(cx,cy);
+  ctx.lineTo(cx+handLen*Math.cos(avgAng-Math.PI/2),cy+handLen*Math.sin(avgAng-Math.PI/2));
+  ctx.strokeStyle='rgba(255,215,0,0.9)';
+  ctx.lineWidth=3;
+  ctx.stroke();
+  // Arrow head
+  const hx=cx+handLen*Math.cos(avgAng-Math.PI/2);
+  const hy=cy+handLen*Math.sin(avgAng-Math.PI/2);
+  ctx.beginPath();
+  ctx.arc(hx,hy,6,0,Math.PI*2);
+  ctx.fillStyle='var(--gold)';
+  ctx.fill();
+
+  // Center dot
+  ctx.beginPath();
+  ctx.arc(cx,cy,5,0,Math.PI*2);
+  ctx.fillStyle='rgba(255,215,0,0.8)';
+  ctx.fill();
+
+  // Label: "N" at top
+  ctx.fillStyle='rgba(0,229,255,0.5)';
+  ctx.font='11px Share Tech Mono';
+  ctx.textAlign='center';
+  ctx.fillText('0°',cx,cy-240);
+  ctx.fillText('90°',cx+240,cy+4);
+  ctx.fillText('180°',cx,cy+248);
+  ctx.fillText('270°',cx-240,cy+4);
+
+  // Stats
+  const bulls=data.filter(d=>d.C>=d.O).length;
+  const bears=data.length-bulls;
+  document.getElementById('rh-angle').textContent=(avgAng*180/Math.PI).toFixed(1)+'°';
+  document.getElementById('rh-coh').textContent=avgCoh.toFixed(3);
+  document.getElementById('rh-bull').textContent=bulls;
+  document.getElementById('rh-bear').textContent=bears;
+  document.getElementById('rh-stats').style.display='grid';
+}
+
+// ══════════════════════════════════════════════════════════
+// MANIFEST ENGINE
+// ══════════════════════════════════════════════════════════
+let manifestLog=[];
+function setHash(h){
+  document.getElementById('m-hash').value=h;
+  parseHash();
+}
+function parseHash(){
+  const h=document.getElementById('m-hash').value.trim();
+  const parts=h.split(':');
+  if(parts.length<5){
+    document.getElementById('m-domain').textContent='?';
+    return;
+  }
+  document.getElementById('m-domain').textContent=parts[1]||'—';
+  document.getElementById('m-pair').textContent=parts[2]||'—';
+  document.getElementById('m-tf').textContent=parts[3]||'—';
+  document.getElementById('m-intent').textContent=parts[4]||'—';
+}
+function runManifest(){
+  const h=document.getElementById('m-hash').value.trim();
+  const C=parseFloat(document.getElementById('m-close').value)||0;
+  const H21=parseFloat(document.getElementById('m-h21').value)||0;
+  const L21=parseFloat(document.getElementById('m-l21').value)||0;
+  const parts=h.split(':');
+  const domain=parts[1]||'';
+  const pair=parts[2]||'';
+  const tf=parts[3]||'';
+  const intent=parts[4]||'';
+
+  parseHash();
+
+  let out='';
+  if(domain==='TRADE'&&C&&H21&&L21){
+    const CA=(H21+L21)/2;
+    const D=(C-CA)/CA*100;
+    let tcclSig=Math.abs(D)<=3?'HOLD':(D>3?'SELL':'BUY');
+    let conflict, cClass;
+    if(intent===tcclSig){conflict='✅ CONFIRMED';cClass='signal-buy';}
+    else if(intent==='BUY'&&tcclSig==='SELL'){conflict='⚠ CONFLICT — Physics says SELL';cClass='signal-conflict';}
+    else if(intent==='SELL'&&tcclSig==='BUY'){conflict='⚠ CONFLICT — Physics says BUY';cClass='signal-conflict';}
+    else{conflict='🟡 COHERENT ZONE — Wait';cClass='signal-hold';}
+    const target=CA;
+    const sl=tcclSig==='BUY'?CA*0.98:tcclSig==='SELL'?CA*1.02:null;
+    out=`Domain: TRADE  |  Pair: ${pair}  |  TF: ${tf}
+Intent: ${intent}  |  TCCL Signal: ${tcclSig}
+Coherence Axis (CA): ${CA.toFixed(2)}
+Deviation D%: ${D.toFixed(2)}%  |  Zone: ${Math.abs(D)>3?'INCOHERENT':'COHERENT'}
+Target: ${target.toFixed(2)}  |  Stop Loss: ${sl?sl.toFixed(2):'—'}
+Status: ${conflict}`;
+    document.getElementById('m-tccl-sig').textContent=tcclSig;
+    document.getElementById('m-tgt').textContent='$'+target.toFixed(2);
+    document.getElementById('m-sl').textContent=sl?'$'+sl.toFixed(2):'—';
+    const cfEl=document.getElementById('m-conflict-badge');
+    cfEl.textContent=conflict; cfEl.className='signal-badge '+cClass;
+    cfEl.style.width='100%'; cfEl.style.justifyContent='center';
+  } else if(domain==='HEALTH'){
+    out=`Domain: HEALTH  |  Symptom: ${pair}  |  Severity: ${tf}
+Action: ${intent}
+Protocol: REST + HYDRATE + Monitor vitals
+Priority: CRITICAL if HIGH severity
+Recommendation: Consult doctor if persists 48h`;
+    document.getElementById('m-tccl-sig').textContent='REST';
+    document.getElementById('m-tgt').textContent='Recovery';
+    document.getElementById('m-sl').textContent='—';
+    const cfEl=document.getElementById('m-conflict-badge');
+    cfEl.textContent='🏥 HEALTH PROTOCOL ACTIVE';
+    cfEl.className='signal-badge signal-hold';
+  } else if(domain==='PLAN'){
+    out=`Domain: PLAN  |  Schedule: ${pair}  |  Time: ${tf}
+Mode: ${intent}
+Protocol: Deep Work Block — 90min focus + 20min break
+Rule: No interruptions during focus window
+Energy: Peak cognitive state`;
+    document.getElementById('m-tccl-sig').textContent='EXECUTE';
+    document.getElementById('m-tgt').textContent='Goal';
+    document.getElementById('m-sl').textContent='—';
+    const cfEl=document.getElementById('m-conflict-badge');
+    cfEl.textContent='📅 PLAN PROTOCOL ACTIVE';
+    cfEl.className='signal-badge signal-hold';
+  } else if(domain==='CITY'){
+    out=`Domain: CITY  |  Resource: ${pair}  |  Zone: ${tf}
+Action: ${intent}
+Allocation: Increase zone supply 40%
+Status: ACTIVE — Monitor demand
+Protocol: Activate backup systems if critical`;
+    document.getElementById('m-tccl-sig').textContent='ALLOCATE';
+    document.getElementById('m-tgt').textContent='Balance';
+    document.getElementById('m-sl').textContent='—';
+    const cfEl=document.getElementById('m-conflict-badge');
+    cfEl.textContent='🏙️ CITY PROTOCOL ACTIVE';
+    cfEl.className='signal-badge signal-hold';
+  } else {
+    out=`Hash: ${h}
+Domain: ${domain||'Unknown'}  |  Processing...
+Add OHLC data for TRADE domain analysis.
+All domains: TRADE · HEALTH · PLAN · CITY`;
+  }
+
+  document.getElementById('manifest-out').textContent=out;
+  const ts=new Date().toLocaleTimeString();
+  manifestLog.unshift(`[${ts}] ${h.substring(0,40)}...`);
+  if(manifestLog.length>10) manifestLog.pop();
+  document.getElementById('manifest-log').innerHTML=
+    manifestLog.map(l=>`<div style="padding:2px 0;border-bottom:1px solid rgba(68,68,119,0.2)">${l}</div>`).join('');
+}
+
+// ══════════════════════════════════════════════════════════
+// BACKTEST
+// ══════════════════════════════════════════════════════════
+const silverData=[
+  {m:'Sep 2024',O:28.50,H:32.71,L:27.69,C:31.97},
+  {m:'Oct 2024',O:31.97,H:34.85,L:30.12,C:32.64},
+  {m:'Nov 2024',O:32.64,H:31.80,L:29.64,C:30.57},
+  {m:'Dec 2024',O:30.57,H:31.20,L:28.40,C:28.92},
+  {m:'Jan 2025',O:28.92,H:31.05,L:28.50,C:30.40},
+  {m:'Feb 2025',O:30.40,H:33.40,L:30.10,C:32.14},
+];
+
+function runBacktest(){
+  const capital=parseFloat(document.getElementById('bt-capital').value)||1000;
+  const wdPct=parseFloat(document.getElementById('bt-withdraw').value)||50;
+  const strat=document.getElementById('bt-strategy').value;
+  const tbody=document.getElementById('bt-tbody');
+  tbody.innerHTML='';
+
+  let cash=capital, oz=0, totalWithdrawn=0, totalSaved=0;
+  let prevClose=null;
+
+  // BUY at first month open
+  oz=cash/silverData[0].O;
+  cash=0;
+
+  silverData.forEach((d,i)=>{
+    const CA=(d.H+d.L)/2;
+    const D=(d.C-CA)/CA*100;
+    const PD=prevClose?((d.C-prevClose)/prevClose*100):null;
+    let sig;
+    if(PD!==null){
+      if(D>3&&PD<0) sig='🔴 SELL';
+      else if(D<-3&&PD>0) sig='🟢 BUY';
+      else if(Math.abs(D)<=3) sig='🟡 HOLD';
+      else sig='⏳ WAIT';
+    } else sig='🟢 ENTRY';
+
+    const portVal=oz*d.C+cash;
+    let profit=0, withdrawn=0, saved=0, action='HOLD';
+
+    // Sell at last row or on SELL signal (swing) or end of period
+    const isSell=(strat==='swing'&&sig==='🔴 SELL')||(i===silverData.length-1);
+    if(isSell&&oz>0){
+      const sellVal=oz*d.C;
+      const costBasis=capital-totalSaved;
+      profit=Math.max(0,sellVal-capital);
+      withdrawn=profit*(wdPct/100);
+      saved=profit-withdrawn;
+      totalWithdrawn+=withdrawn;
+      totalSaved+=saved;
+      action='SELL @ $'+d.C.toFixed(2);
+      if(strat==='swing'&&i<silverData.length-1){
+        cash=sellVal-withdrawn;
+        oz=0;
+      } else {
+        cash=sellVal;
+        oz=0;
+      }
+    }
+    // Re-buy on BUY signal in swing mode
+    if(strat==='swing'&&sig==='🟢 BUY'&&cash>0){
+      oz=cash/d.L; cash=0; action='BUY @ $'+d.L.toFixed(2);
+    }
+
+    const sigColor=sig.includes('BUY')?'var(--green)':sig.includes('SELL')?'var(--red)':'var(--gold)';
+    const portColor=portVal>capital?'var(--green)':'var(--red)';
+
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td style="color:var(--silver);font-weight:700">${d.m}</td>
+      <td>$${d.O.toFixed(2)}</td>
+      <td style="color:var(--green)">$${d.H.toFixed(2)}</td>
+      <td style="color:var(--red)">$${d.L.toFixed(2)}</td>
+      <td style="color:var(--cyan);font-weight:700">$${d.C.toFixed(2)}</td>
+      <td style="color:var(--gold)">$${CA.toFixed(2)}</td>
+      <td style="color:${D>3?'var(--red)':(D<-3?'var(--green)':'var(--orange)')}">${D>0?'+':''}${D.toFixed(2)}%</td>
+      <td style="color:${sigColor};font-weight:700">${sig}</td>
+      <td style="color:var(--cyan)">${oz.toFixed(3)}</td>
+      <td style="color:${portColor};font-weight:700">$${(oz*d.C+cash).toFixed(2)}</td>
+      <td style="color:${profit?'var(--green)':'var(--sub)'}">$${profit.toFixed(2)}</td>
+      <td style="color:${withdrawn?'var(--red)':'var(--sub)'}">$${withdrawn.toFixed(2)}</td>
+      <td style="color:${saved?'var(--green)':'var(--sub)'}">$${saved.toFixed(2)}</td>
+      <td style="color:var(--gold);font-weight:700">$${totalSaved.toFixed(2)}</td>`;
+    tbody.appendChild(tr);
+    prevClose=d.C;
+  });
+
+  // Final summary
+  const finalVal=oz*silverData[silverData.length-1].C+cash;
+  const totalReturn=finalVal+totalWithdrawn-capital;
+  const retPct=(totalReturn/capital*100);
+
+  const summary=document.getElementById('bt-summary');
+  summary.style.display='block';
+  const results=document.getElementById('bt-results');
+  results.innerHTML=`
+    <div class="stat-box">
+      <div class="stat-label">INITIAL CAPITAL</div>
+      <div class="stat-value" style="color:var(--cyan)">$${capital.toFixed(2)}</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">FINAL PORTFOLIO</div>
+      <div class="stat-value glow-green" style="color:var(--green)">$${finalVal.toFixed(2)}</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">TOTAL WITHDRAWN</div>
+      <div class="stat-value" style="color:var(--red)">$${totalWithdrawn.toFixed(2)}</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">TOTAL SAVED</div>
+      <div class="stat-value" style="color:var(--green)">$${totalSaved.toFixed(2)}</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">TOTAL IN HAND</div>
+      <div class="stat-value glow-gold" style="color:var(--gold);font-size:22px">$${(finalVal+totalWithdrawn).toFixed(2)}</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">TOTAL RETURN</div>
+      <div class="stat-value" style="color:${retPct>=0?'var(--green)':'var(--red)'}">
+        ${retPct>=0?'+':''}${retPct.toFixed(2)}%
+      </div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">NET PROFIT</div>
+      <div class="stat-value" style="color:var(--green)">$${totalReturn.toFixed(2)}</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">WITHDRAW RATE</div>
+      <div class="stat-value" style="color:var(--orange)">${wdPct}% / ${100-wdPct}%</div>
+    </div>`;
+
+  document.getElementById('bt-conclusion').innerHTML=`
+    <div class="manifest-output" style="color:var(--gold);font-size:13px;line-height:2">
+🥈 SILVER BACKTEST COMPLETE — Sep 2024 → Feb 2025
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💰 Initial: $${capital.toFixed(2)}  |  Strategy: ${strat==='hold'?'Buy & Hold':'Swing Trading'}
+📈 Final Portfolio: $${finalVal.toFixed(2)}
+💵 Total Withdrawn (pocket): $${totalWithdrawn.toFixed(2)}
+🏦 Saved: $${totalSaved.toFixed(2)}
+🎯 TOTAL IN HAND: $${(finalVal+totalWithdrawn).toFixed(2)}
+📊 Return: ${retPct>=0?'+':''}${retPct.toFixed(2)}%
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════════════
+// LIVE DATA — BINANCE API
+// ══════════════════════════════════════════════════════════
+document.getElementById('live-symbol').addEventListener('change', function() {
+  const wrap = document.getElementById('custom-sym-wrap');
+  if(this.value === 'custom') {
+    wrap.style.display = 'block';
+  } else {
+    wrap.style.display = 'none';
+  }
+});
+
+function getLiveSymbol() {
+  const sel = document.getElementById('live-symbol').value;
+  if(sel === 'custom') {
+    return document.getElementById('custom-symbol').value.toUpperCase().trim() || 'BTCUSDT';
+  }
+  return sel;
+}
+
+function setLiveStatus(msg, color='var(--sub)') {
+  const el = document.getElementById('live-status');
+  el.textContent = msg;
+  el.style.color = color;
+}
+
+async function fetchLiveData() {
+  const symbol   = getLiveSymbol();
+  const interval = document.getElementById('live-interval').value;
+  const periods  = parseInt(document.getElementById('live-periods').value) || 21;
+  const btn      = document.getElementById('fetch-btn');
+
+  btn.textContent = '⏳ Fetching...';
+  btn.disabled = true;
+  setLiveStatus('🌐 Binance API बाट data fetch हुँदैछ...', 'var(--cyan)');
+
+  try {
+    // Binance public klines endpoint — no API key needed
+    const url = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${periods + 1}`;
+    const resp = await fetch(url);
+
+    if(!resp.ok) {
+      throw new Error(`HTTP ${resp.status} — Symbol "${symbol}" फेला परेन`);
+    }
+
+    const klines = await resp.json();
+    if(!klines || klines.length < 2) {
+      throw new Error('Data अपर्याप्त — अर्को symbol try गर्नुस्');
+    }
+
+    // Binance kline format: [openTime, open, high, low, close, volume, ...]
+    const candles = klines.map(k => ({
+      t: new Date(k[0]).toISOString().split('T')[0],
+      O: parseFloat(k[1]),
+      H: parseFloat(k[2]),
+      L: parseFloat(k[3]),
+      C: parseFloat(k[4]),
+      V: parseFloat(k[5])
+    }));
+
+    // Calculate 21-period high/low from all candles
+    const h21 = Math.max(...candles.map(c => c.H));
+    const l21 = Math.min(...candles.map(c => c.L));
+    const latest = candles[candles.length - 1];
+    const prev   = candles[candles.length - 2];
+
+    // Auto-fill TCCL inputs
+    document.getElementById('t-symbol').value = symbol;
+    document.getElementById('t-high').value   = h21.toFixed(4);
+    document.getElementById('t-low').value    = l21.toFixed(4);
+    document.getElementById('t-close').value  = latest.C.toFixed(4);
+    document.getElementById('t-prev').value   = prev.C.toFixed(4);
+
+    // Show ticker
+    const chgPct = ((latest.C - prev.C) / prev.C * 100);
+    const ticker = document.getElementById('live-ticker');
+    ticker.style.display = 'block';
+    document.getElementById('tick-sym').textContent   = symbol;
+    document.getElementById('tick-price').textContent = '$' + latest.C.toLocaleString('en', {minimumFractionDigits:2, maximumFractionDigits:4});
+    const chgEl = document.getElementById('tick-chg');
+    chgEl.textContent   = (chgPct >= 0 ? '▲+' : '▼') + chgPct.toFixed(2) + '%';
+    chgEl.style.color   = chgPct >= 0 ? 'var(--green)' : 'var(--red)';
+    document.getElementById('tick-time').textContent = '@ ' + new Date(latest.t).toLocaleDateString() + ' ' + interval;
+
+    setLiveStatus(
+      `✅ ${symbol} — ${candles.length} candles loaded | H21: ${h21.toFixed(2)} | L21: ${l21.toFixed(2)} | Close: ${latest.C.toFixed(2)}`,
+      'var(--green)'
+    );
+
+    // Also populate RH chart textarea
+    const rhLines = candles.map(c => `${c.O.toFixed(4)},${c.H.toFixed(4)},${c.L.toFixed(4)},${c.C.toFixed(4)}`).join('\n');
+    document.getElementById('rh-data').value = rhLines;
+
+    // Also populate OHLC multi-row table
+    const tbody = document.getElementById('ohlc-tbody');
+    tbody.innerHTML = '';
+    candles.slice(-21).forEach(c => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><input class="ohlc-row-input" style="width:110px" value="${c.t}"></td>
+        <td><input class="ohlc-row-input" value="${c.O.toFixed(4)}"></td>
+        <td><input class="ohlc-row-input" value="${c.H.toFixed(4)}"></td>
+        <td><input class="ohlc-row-input" value="${c.L.toFixed(4)}"></td>
+        <td><input class="ohlc-row-input" value="${c.C.toFixed(4)}"></td>
+        <td class="calc-ca" style="color:var(--gold)">—</td>
+        <td class="calc-dev" style="color:var(--orange)">—</td>
+        <td class="calc-pd" style="color:var(--green)">—</td>
+        <td class="calc-sig">—</td>
+        <td class="calc-tgt" style="color:var(--green)">—</td>
+        <td class="calc-sl" style="color:var(--red)">—</td>
+        <td><button class="delete-row" onclick="deleteRow(this)">✕</button></td>`;
+      tbody.appendChild(tr);
+      tr.querySelectorAll('.ohlc-row-input').forEach(inp => {
+        inp.addEventListener('input', debounce(saveRowsToStorage, 600));
+      });
+    });
+
+    // Save to storage
+    saveRowsToStorage();
+
+    // Auto-calculate
+    calcAllRows();
+
+  } catch(err) {
+    setLiveStatus('❌ Error: ' + err.message, 'var(--red)');
+    console.error('Fetch error:', err);
+  } finally {
+    btn.textContent = '🌐 FETCH LIVE';
+    btn.disabled = false;
+  }
+}
+
+async function fetchAndRun() {
+  await fetchLiveData();
+  setTimeout(() => runTCCL(), 300);
+}
+
+// Auto-refresh every 60 seconds if live mode active
+let autoRefreshTimer = null;
+function toggleAutoRefresh() {
+  if(autoRefreshTimer) {
+    clearInterval(autoRefreshTimer);
+    autoRefreshTimer = null;
+    setLiveStatus('⏸ Auto-refresh stopped', 'var(--orange)');
+  } else {
+    autoRefreshTimer = setInterval(() => {
+      fetchLiveData();
+    }, 60000);
+    setLiveStatus('🔄 Auto-refresh ON — every 60s', 'var(--green)');
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════
+const STORAGE_KEY = 'tccl_ohlc_rows_v1';
+
+function saveRowsToStorage() {
+  const rows = document.querySelectorAll('#ohlc-tbody tr');
+  const data = [];
+  rows.forEach(row => {
+    const inputs = row.querySelectorAll('.ohlc-row-input');
+    data.push({
+      date: inputs[0]?.value||'',
+      open: inputs[1]?.value||'',
+      high: inputs[2]?.value||'',
+      low:  inputs[3]?.value||'',
+      close:inputs[4]?.value||''
+    });
+  });
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    showSaveIndicator();
+  } catch(e) { console.warn('Storage save failed:', e); }
+}
+
+function loadRowsFromStorage() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const data = JSON.parse(raw);
+    if (!data || !data.length) return false;
+    const tbody = document.getElementById('ohlc-tbody');
+    tbody.innerHTML = '';
+    data.forEach(r => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><input class="ohlc-row-input" placeholder="date" style="width:110px" value="${r.date}"></td>
+        <td><input class="ohlc-row-input" placeholder="open" value="${r.open}"></td>
+        <td><input class="ohlc-row-input" placeholder="high" value="${r.high}"></td>
+        <td><input class="ohlc-row-input" placeholder="low"  value="${r.low}"></td>
+        <td><input class="ohlc-row-input" placeholder="close" value="${r.close}"></td>
+        <td class="calc-ca" style="color:var(--gold)">—</td>
+        <td class="calc-dev" style="color:var(--orange)">—</td>
+        <td class="calc-pd" style="color:var(--green)">—</td>
+        <td class="calc-sig">—</td>
+        <td class="calc-tgt" style="color:var(--green)">—</td>
+        <td class="calc-sl" style="color:var(--red)">—</td>
+        <td><button class="delete-row" onclick="deleteRow(this)">✕</button></td>`;
+      tbody.appendChild(tr);
+      // auto-save on input change
+      tr.querySelectorAll('.ohlc-row-input').forEach(inp => {
+        inp.addEventListener('input', debounce(saveRowsToStorage, 600));
+      });
+    });
+    updateStorageStatus(data.length + ' rows loaded from browser storage');
+    return true;
+  } catch(e) { return false; }
+}
+
+function debounce(fn, delay) {
+  let t; return function(...args){ clearTimeout(t); t=setTimeout(()=>fn(...args), delay); };
+}
+
+function showSaveIndicator() {
+  const el = document.getElementById('storage-status');
+  if (!el) return;
+  el.style.color = 'var(--green)';
+  el.textContent = '✅ Auto-saved to browser — ' + new Date().toLocaleTimeString();
+  setTimeout(()=>{ el.style.color='var(--sub)'; el.textContent='💾 Data auto-saves to browser storage'; }, 2500);
+}
+
+function updateStorageStatus(msg) {
+  const el = document.getElementById('storage-status');
+  if (el) el.textContent = msg;
+}
+
+function clearStorage() {
+  if (confirm('Browser storage को सबै saved data delete गर्ने?')) {
+    localStorage.removeItem(STORAGE_KEY);
+    clearTable();
+    updateStorageStatus('🗑 Storage cleared');
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// EXCEL CSV EXPORT
+// ══════════════════════════════════════════════════════════
+function exportToExcel() {
+  // First calculate all rows
+  calcAllRows();
+
+  const rows = document.querySelectorAll('#ohlc-tbody tr');
+  if (!rows.length) { alert('Data नभएको row export हुँदैन!'); return; }
+
+  // Build CSV (Excel opens CSV perfectly)
+  const headers = ['DATE','OPEN','HIGH','LOW','CLOSE','CA','D%','PD%','SIGNAL','TARGET','STOP LOSS'];
+  const lines = [headers.join(',')];
+
+  rows.forEach(row => {
+    const inputs = row.querySelectorAll('.ohlc-row-input');
+    const date  = inputs[0]?.value||'';
+    const open  = inputs[1]?.value||'';
+    const high  = inputs[2]?.value||'';
+    const low   = inputs[3]?.value||'';
+    const close = inputs[4]?.value||'';
+    const ca    = row.querySelector('.calc-ca')?.textContent||'';
+    const dev   = row.querySelector('.calc-dev')?.textContent||'';
+    const pd    = row.querySelector('.calc-pd')?.textContent||'';
+    const sig   = row.querySelector('.calc-sig')?.textContent||'';
+    const tgt   = row.querySelector('.calc-tgt')?.textContent||'';
+    const sl    = row.querySelector('.calc-sl')?.textContent||'';
+    // Escape commas in signal text
+    const row_data = [date,open,high,low,close,ca,dev,pd,
+      '"'+sig+'"',tgt,sl];
+    lines.push(row_data.join(','));
+  });
+
+  // Add TCCL summary section
+  lines.push('');
+  lines.push('TCCL ENGINE EXPORT,,,,,,,,,,');
+  lines.push('Generated,' + new Date().toLocaleString() + ',,,,,,,,');
+  lines.push('Total Rows,' + rows.length + ',,,,,,,,');
+  lines.push('Formula: CA=(High+Low)/2 | D%=(Close-CA)/CA*100 | BUY: D%<-3%+PD%>0 | SELL: D%>3%+PD%<0,,,,,,,,');
+
+  const csv = lines.join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'TCCL_Data_' + new Date().toISOString().split('T')[0] + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+
+  showExportMsg('✅ Excel file downloaded! (.csv — Excel मा directly खुल्छ)');
+}
+
+function exportBacktestToExcel() {
+  const rows = document.querySelectorAll('#bt-tbody tr');
+  if (!rows.length) { alert('Backtest पहिले run गर्नुस्!'); return; }
+
+  const headers = ['MONTH','OPEN','HIGH','LOW','CLOSE','CA','D%','SIGNAL','oz HELD','PORTFOLIO $','PROFIT $','WITHDRAWN $','SAVED $','TOTAL SAVED $'];
+  const lines = [headers.join(',')];
+
+  rows.forEach(row => {
+    const cells = row.querySelectorAll('td');
+    const rowData = Array.from(cells).map(td => '"'+td.textContent.replace(/"/g,'""')+'"');
+    lines.push(rowData.join(','));
+  });
+
+  lines.push('');
+  lines.push('"SILVER BACKTEST — Sep 2024 to Feb 2025"');
+  lines.push('"Generated: ' + new Date().toLocaleString() + '"');
+  lines.push('"Initial Capital: $' + (document.getElementById('bt-capital').value||1000) + '"');
+  lines.push('"Strategy: ' + document.getElementById('bt-strategy').value + '"');
+
+  const csv = lines.join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'Silver_Backtest_TCCL.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+  showExportMsg('✅ Backtest Excel downloaded!');
+}
+
+function showExportMsg(msg) {
+  const el = document.getElementById('export-msg');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.display = 'block';
+  setTimeout(()=>{ el.style.display='none'; }, 3000);
+}
+
+// ══════════════════════════════════════════════════════════
+// OVERRIDE addRow to attach auto-save
+// ══════════════════════════════════════════════════════════
+const _origAddRow = addRow;
+window.addRow = function() {
+  const tbody = document.getElementById('ohlc-tbody');
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input class="ohlc-row-input" placeholder="date" style="width:110px"></td>
+    <td><input class="ohlc-row-input" placeholder="open"></td>
+    <td><input class="ohlc-row-input" placeholder="high"></td>
+    <td><input class="ohlc-row-input" placeholder="low"></td>
+    <td><input class="ohlc-row-input" placeholder="close"></td>
+    <td class="calc-ca" style="color:var(--gold)">—</td>
+    <td class="calc-dev" style="color:var(--orange)">—</td>
+    <td class="calc-pd" style="color:var(--green)">—</td>
+    <td class="calc-sig">—</td>
+    <td class="calc-tgt" style="color:var(--green)">—</td>
+    <td class="calc-sl" style="color:var(--red)">—</td>
+    <td><button class="delete-row" onclick="deleteRow(this)">✕</button></td>`;
+  tbody.appendChild(tr);
+  tr.querySelectorAll('.ohlc-row-input').forEach(inp => {
+    inp.addEventListener('input', debounce(saveRowsToStorage, 600));
+  });
+};
+
+// ══════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════
+parseHash();
+runBacktest();
+
+// Try load saved rows, else add empty row
+const loaded = loadRowsFromStorage();
+if (!loaded) {
+  const tbody = document.getElementById('ohlc-tbody');
+  if (!tbody.children.length) addRow();
+}
+// Attach save to existing rows
+document.querySelectorAll('#ohlc-tbody .ohlc-row-input').forEach(inp => {
+  inp.addEventListener('input', debounce(saveRowsToStorage, 600));
+});
+
+setTimeout(()=>{
+  const canvas=document.getElementById('rh-canvas');
+  const ctx=canvas.getContext('2d');
+  ctx.fillStyle='#080814';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle='rgba(0,229,255,0.3)';
+  ctx.font='14px Share Tech Mono';
+  ctx.textAlign='center';
+  ctx.fillText('← Click "🔵 Circular RH Chart" tab to load chart',canvas.width/2,canvas.height/2);
+},100);
+</script>
+</body>
+</html>

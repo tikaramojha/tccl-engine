@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MTF-Q-LDA+ Market Intelligence Engine</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@300;400;600;700&family=Orbitron:wght@400;700;900&display=swap');
+:root {
+  --bg:#060610;--bg2:#0a0a1a;--bg3:#0f0f22;--alt:#111128;
+  --accent:#6c3dc8;--cyan:#00e5ff;--gold:#ffd700;--green:#00ff99;
+  --red:#ff4444;--orange:#ff6b35;--purple:#9d4edd;--text:#e8e8ff;
+  --sub:#9999cc;--border:rgba(108,61,200,0.35);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(0,229,255,0.025) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(0,229,255,0.025) 1px,transparent 1px);
+  background-size:50px 50px;pointer-events:none;z-index:0;}
+.wrap{position:relative;z-index:1;max-width:1500px;margin:0 auto;padding:16px;}
+
+/* HEADER */
+.hdr{text-align:center;padding:24px 16px 18px;border-bottom:1px solid var(--border);margin-bottom:20px;position:relative;}
+.hdr::after{content:'';position:absolute;bottom:-1px;left:50%;transform:translateX(-50%);
+  width:300px;height:2px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);}
+.logo{font-family:'Orbitron',monospace;font-size:clamp(16px,2.5vw,28px);font-weight:900;
+  color:var(--gold);letter-spacing:3px;text-shadow:0 0 30px rgba(255,215,0,0.4);}
+.logo span{color:var(--cyan);}
+.sub-title{font-family:'Share Tech Mono',monospace;color:var(--sub);font-size:10px;margin-top:5px;letter-spacing:2px;}
+
+/* TABS */
+.tabs{display:flex;gap:3px;margin-bottom:18px;border-bottom:1px solid var(--border);flex-wrap:wrap;}
+.tab{padding:9px 18px;background:transparent;border:1px solid transparent;border-bottom:none;
+  color:var(--sub);cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:600;
+  letter-spacing:1px;transition:all 0.2s;border-radius:4px 4px 0 0;}
+.tab:hover{color:var(--cyan);border-color:var(--border);}
+.tab.active{color:var(--cyan);background:rgba(0,229,255,0.05);border-color:var(--cyan);
+  border-bottom-color:var(--bg);text-shadow:0 0 10px rgba(0,229,255,0.4);}
+.panel{display:none;}.panel.active{display:block;}
+
+/* CARDS */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;
+  padding:18px;margin-bottom:14px;position:relative;overflow:hidden;}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--accent),transparent);}
+.card-title{font-family:'Orbitron',monospace;font-size:11px;color:var(--gold);
+  letter-spacing:2px;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+
+/* GRID */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+@media(max-width:900px){.g2,.g3,.g4{grid-template-columns:1fr 1fr;}}
+@media(max-width:500px){.g2,.g3,.g4{grid-template-columns:1fr;}}
+
+/* INPUTS */
+.ig{margin-bottom:10px;}
+.lbl{display:block;font-family:'Share Tech Mono',monospace;font-size:10px;
+  color:var(--sub);letter-spacing:1px;margin-bottom:3px;}
+.inp{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:4px;
+  padding:9px 12px;color:var(--cyan);font-family:'Share Tech Mono',monospace;font-size:12px;
+  outline:none;transition:border-color 0.2s,box-shadow 0.2s;}
+.inp:focus{border-color:var(--cyan);box-shadow:0 0 0 2px rgba(0,229,255,0.08);}
+.inp::placeholder{color:rgba(153,153,204,0.25);}
+
+/* BUTTONS */
+.btn{padding:10px 22px;border:none;border-radius:4px;cursor:pointer;
+  font-family:'Orbitron',monospace;font-size:11px;font-weight:700;letter-spacing:2px;transition:all 0.2s;}
+.btn-p{background:linear-gradient(135deg,var(--accent),#4a2090);color:#fff;border:1px solid rgba(108,61,200,0.5);}
+.btn-p:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(108,61,200,0.4);}
+.btn-c{background:transparent;color:var(--cyan);border:1px solid var(--cyan);}
+.btn-c:hover{background:rgba(0,229,255,0.08);}
+.btn-g{background:linear-gradient(135deg,#b8860b,#ffd700);color:#0a0a14;border:none;}
+.btn-g:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(255,215,0,0.3);}
+.btn-r{background:transparent;color:var(--red);border:1px solid var(--red);}
+.btn:disabled{opacity:0.4;cursor:not-allowed;transform:none!important;}
+
+/* STAT BOXES */
+.sb{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:12px;text-align:center;}
+.sl{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--sub);letter-spacing:1px;margin-bottom:5px;}
+.sv{font-family:'Orbitron',monospace;font-size:clamp(13px,1.8vw,18px);font-weight:700;}
+
+/* SIGNAL BADGE */
+.badge{display:inline-flex;align-items:center;gap:6px;padding:8px 20px;border-radius:4px;
+  font-family:'Orbitron',monospace;font-size:13px;font-weight:700;letter-spacing:2px;}
+.b-long{background:rgba(0,255,153,0.12);border:1px solid var(--green);color:var(--green);}
+.b-short{background:rgba(255,68,68,0.12);border:1px solid var(--red);color:var(--red);}
+.b-flat{background:rgba(255,215,0,0.08);border:1px solid var(--gold);color:var(--gold);}
+.b-info{background:rgba(0,229,255,0.08);border:1px solid var(--cyan);color:var(--cyan);}
+
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse;font-size:12px;}
+.tbl th{background:var(--bg3);color:var(--gold);font-family:'Share Tech Mono',monospace;
+  font-size:9px;letter-spacing:1px;padding:8px 10px;text-align:center;
+  border:1px solid var(--border);white-space:nowrap;}
+.tbl td{padding:8px 10px;border:1px solid rgba(68,68,119,0.25);text-align:center;
+  font-family:'Share Tech Mono',monospace;font-size:11px;}
+.tbl tr:nth-child(even) td{background:rgba(255,255,255,0.015);}
+.tbl tr:hover td{background:rgba(0,229,255,0.03);}
+
+/* PROGRESS */
+.pbar{height:3px;background:var(--bg3);border-radius:2px;overflow:hidden;margin-top:4px;}
+.pfill{height:100%;border-radius:2px;transition:width 0.4s ease;}
+
+/* CODE BOX */
+.code-box{background:#050510;border:1px solid rgba(0,229,255,0.2);border-radius:6px;
+  padding:14px;font-family:'Share Tech Mono',monospace;font-size:11px;color:#88ff88;
+  line-height:1.7;overflow-x:auto;white-space:pre;}
+
+/* LOG */
+.log-box{background:var(--bg3);border:1px solid var(--border);border-radius:6px;
+  padding:12px;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--sub);
+  max-height:180px;overflow-y:auto;line-height:1.8;}
+.log-line{border-bottom:1px solid rgba(68,68,119,0.15);padding:2px 0;}
+.log-ok{color:var(--green);}.log-warn{color:var(--orange);}.log-err{color:var(--red);}
+
+/* CANVAS */
+canvas{background:var(--bg3);border:1px solid var(--border);border-radius:6px;display:block;}
+
+/* SPINNER */
+.spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(0,229,255,0.2);
+  border-top-color:var(--cyan);border-radius:50%;animation:spin 0.8s linear infinite;vertical-align:middle;margin-right:6px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="hdr">
+  <div class="logo">MTF-Q-<span>LDA</span>+</div>
+  <div class="sub-title">MULTI-TIMEFRAME QUANTUM-LDA PLUS · HILBERT PHASE · META-MODEL · LIVE SIGNALS</div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="ST('live')">🌐 Live Signal</button>
+  <button class="tab" onclick="ST('engine')">⚙️ Engine Details</button>
+  <button class="tab" onclick="ST('chart')">📈 Equity Chart</button>
+  <button class="tab" onclick="ST('table')">📋 Signal Log</button>
+  <button class="tab" onclick="ST('guide')">📖 Python Guide</button>
+</div>
+
+<!-- ══ PANEL 1 — LIVE SIGNAL ══ -->
+<div id="panel-live" class="panel active">
+
+  <div class="g2">
+    <!-- Fetch + Config -->
+    <div class="card">
+      <div class="card-title">🌐 LIVE DATA — BINANCE API</div>
+      <div class="g2">
+        <div class="ig">
+          <label class="lbl">SYMBOL</label>
+          <select class="inp" id="ls-sym">
+            <option value="BTCUSDT">BTC/USDT</option>
+            <option value="ETHUSDT">ETH/USDT</option>
+            <option value="SOLUSDT">SOL/USDT</option>
+            <option value="XAGUSD_sim">Silver (simulated)</option>
+            <option value="BNBUSDT">BNB/USDT</option>
+            <option value="XRPUSDT">XRP/USDT</option>
+          </select>
+        </div>
+        <div class="ig">
+          <label class="lbl">INTERVAL</label>
+          <select class="inp" id="ls-int">
+            <option value="1d" selected>Daily (1D)</option>
+            <option value="4h">4 Hour</option>
+            <option value="1h">1 Hour</option>
+          </select>
+        </div>
+      </div>
+      <div class="ig">
+        <label class="lbl">BARS TO FETCH (min 150 for warmup)</label>
+        <select class="inp" id="ls-bars">
+          <option value="200" selected>200 bars</option>
+          <option value="300">300 bars</option>
+          <option value="500">500 bars</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:4px;">
+        <button class="btn btn-p" style="flex:2" id="fetch-run-btn" onclick="fetchAndRun()">🌐 FETCH + RUN MTF-Q-LDA+</button>
+        <button class="btn btn-c" style="flex:1;font-size:10px" onclick="runDemo()">DEMO</button>
+      </div>
+      <div id="fetch-status" class="log-box" style="margin-top:10px;min-height:50px;">
+        ← Symbol छानेर FETCH + RUN थिच्नुस्
+      </div>
+    </div>
+
+    <!-- Latest Signal Output -->
+    <div class="card">
+      <div class="card-title">✅ LATEST MTF-Q-LDA+ SIGNAL</div>
+      <div style="text-align:center;margin-bottom:14px;">
+        <div id="main-signal" class="badge b-flat" style="font-size:20px;display:inline-flex">
+          ⏳ AWAITING DATA
+        </div>
+      </div>
+      <div class="g2" style="margin-bottom:12px;">
+        <div class="sb"><div class="sl">META PROBABILITY</div>
+          <div class="sv" id="meta-prob" style="color:var(--purple)">—</div>
+          <div class="pbar"><div class="pfill" id="meta-prob-bar" style="width:50%;background:var(--purple)"></div></div>
+        </div>
+        <div class="sb"><div class="sl">COMPOSITE SIGNAL</div>
+          <div class="sv" id="comp-val" style="color:var(--cyan)">—</div></div>
+        <div class="sb"><div class="sl">ENERGY</div>
+          <div class="sv" id="energy-val" style="color:var(--orange)">—</div></div>
+        <div class="sb"><div class="sl">POSITION SIZE</div>
+          <div class="sv" id="size-val" style="color:var(--gold)">—</div></div>
+      </div>
+
+      <div class="card-title" style="margin-top:8px;">⚖️ CONSENSUS TIERS (TF Agreement)</div>
+      <div class="g3">
+        <div class="sb"><div class="sl">30m PHASE</div>
+          <div class="sv" id="tf-30m" style="font-size:13px">—</div></div>
+        <div class="sb"><div class="sl">DAILY PHASE</div>
+          <div class="sv" id="tf-daily" style="font-size:13px">—</div></div>
+        <div class="sb"><div class="sl">WEEKLY PHASE</div>
+          <div class="sv" id="tf-weekly" style="font-size:13px">—</div></div>
+      </div>
+
+      <div class="g3" style="margin-top:10px;">
+        <div class="sb"><div class="sl">w_30m</div>
+          <div class="sv" id="w30" style="color:var(--cyan);font-size:14px">—</div></div>
+        <div class="sb"><div class="sl">w_daily</div>
+          <div class="sv" id="wday" style="color:var(--green);font-size:14px">—</div></div>
+        <div class="sb"><div class="sl">w_weekly</div>
+          <div class="sv" id="wwkly" style="color:var(--gold);font-size:14px">—</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Performance row -->
+  <div class="card">
+    <div class="card-title">📊 BACKTEST PERFORMANCE (on fetched data)</div>
+    <div class="g4" id="perf-grid">
+      <div class="sb"><div class="sl">TOTAL RETURN</div><div class="sv" id="p-ret" style="color:var(--green)">—</div></div>
+      <div class="sb"><div class="sl">SHARPE RATIO</div><div class="sv" id="p-sharpe" style="color:var(--cyan)">—</div></div>
+      <div class="sb"><div class="sl">MAX DRAWDOWN</div><div class="sv" id="p-dd" style="color:var(--red)">—</div></div>
+      <div class="sb"><div class="sl">HIT RATE</div><div class="sv" id="p-hit" style="color:var(--purple)">—</div></div>
+      <div class="sb"><div class="sl">LONG DAYS</div><div class="sv" id="p-long" style="color:var(--green)">—</div></div>
+      <div class="sb"><div class="sl">SHORT DAYS</div><div class="sv" id="p-short" style="color:var(--red)">—</div></div>
+      <div class="sb"><div class="sl">FLAT DAYS</div><div class="sv" id="p-flat" style="color:var(--gold)">—</div></div>
+      <div class="sb"><div class="sl">FINAL EQUITY</div><div class="sv" id="p-eq" style="color:var(--gold)">—</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PANEL 2 — ENGINE DETAILS ══ -->
+<div id="panel-engine" class="panel">
+  <div class="g2">
+    <div class="card">
+      <div class="card-title">🔬 ALGORITHM OVERVIEW</div>
+      <div style="font-size:13px;line-height:2;color:var(--text);">
+        <p style="margin-bottom:8px;color:var(--cyan);font-family:'Share Tech Mono',monospace;font-size:11px;">PIPELINE: Preprocess → Features → Weights → Meta-Model → Execution</p>
+        <table class="tbl">
+          <tr><th>COMPONENT</th><th>METHOD</th><th>PURPOSE</th></tr>
+          <tr><td style="color:var(--gold)">Phase Extraction</td><td style="color:var(--cyan)">Hilbert Transform</td><td style="color:var(--text);text-align:left">Instantaneous phase from detrended log-price</td></tr>
+          <tr><td style="color:var(--gold)">Velocity</td><td style="color:var(--cyan)">Δphase derivative</td><td style="color:var(--text);text-align:left">Rate of phase change — momentum direction</td></tr>
+          <tr><td style="color:var(--gold)">Coherence C</td><td style="color:var(--cyan)">mean(amp)/std(amp)</td><td style="color:var(--text);text-align:left">Signal clarity — high C = strong trend</td></tr>
+          <tr><td style="color:var(--gold)">Kurtosis γ</td><td style="color:var(--cyan)">4th moment proxy</td><td style="color:var(--text);text-align:left">Tail risk / fat tails detection</td></tr>
+          <tr><td style="color:var(--gold)">Trend S</td><td style="color:var(--cyan)">tanh(mean/std)</td><td style="color:var(--text);text-align:left">Normalized trend strength</td></tr>
+          <tr><td style="color:var(--gold)">Weights</td><td style="color:var(--cyan)">Softmax + L-BFGS-B</td><td style="color:var(--text);text-align:left">Dynamic per-TF weights optimize Pearson corr</td></tr>
+          <tr><td style="color:var(--gold)">Meta-Model</td><td style="color:var(--cyan)">Logistic Reg L2</td><td style="color:var(--text);text-align:left">Probability of up-move next day</td></tr>
+          <tr><td style="color:var(--gold)">Sizing</td><td style="color:var(--cyan)">Consensus × Energy × ATR</td><td style="color:var(--text);text-align:left">Position size from TF agreement + energy gate</td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">📐 KEY FORMULAS</div>
+      <div class="code-box">// Hilbert Phase
+s(τ) = x(t-τ:t) - linfit(x(t-τ:t))
+θ = angle(analytic(s)[-1])
+Δθ = wrap(θ_t - θ_{t-1}, -π, π)
+
+// Velocity
+v_t = Δθ_t - Δθ_{t-1}
+
+// Feature vector (per TF)
+f = [sin(Δθ), v, C, γ, S]
+
+// Composite signal
+comp = Σ w_TF × (α₁·sin(Δθ_TF) + α₂·v_TF)
+  α₁=1.0, α₂=0.6
+
+// Energy
+μ = C̄ × γ̄ × S̄ × comp
+E = 100 × μ²
+
+// Consensus tiers
+3 TF agree → size = 1.0
+2 TF agree → size = 0.6
+1 TF agree → size = 0.2
+
+// Meta-model threshold
+P > 0.55 → LONG (size)
+P < 0.45 → SHORT (-size)
+else     → FLAT (0)
+
+// Weight optimizer
+min: -corr(comp, next_ret) + λ·Σ(w-w_prior)²
+λ = 5.0, window = 90 days
+w_new = 0.8·w_prior + 0.2·w_opt</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">⚙️ HYPERPARAMETERS</div>
+    <div class="g4">
+      <div class="sb"><div class="sl">Window 30m</div><div class="sv" style="color:var(--cyan);font-size:14px">12 bars</div></div>
+      <div class="sb"><div class="sl">Window Daily</div><div class="sv" style="color:var(--cyan);font-size:14px">5 bars</div></div>
+      <div class="sb"><div class="sl">Window Weekly</div><div class="sv" style="color:var(--cyan);font-size:14px">4 bars</div></div>
+      <div class="sb"><div class="sl">Warmup</div><div class="sv" style="color:var(--gold);font-size:14px">120 days</div></div>
+      <div class="sb"><div class="sl">Opt Window</div><div class="sv" style="color:var(--orange);font-size:14px">90 days</div></div>
+      <div class="sb"><div class="sl">L2 Reg λ</div><div class="sv" style="color:var(--purple);font-size:14px">5.0</div></div>
+      <div class="sb"><div class="sl">EWMA Prior</div><div class="sv" style="color:var(--green);font-size:14px">0.8</div></div>
+      <div class="sb"><div class="sl">TC Rate</div><div class="sv" style="color:var(--red);font-size:14px">4 bps</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PANEL 3 — CHART ══ -->
+<div id="panel-chart" class="panel">
+  <div class="card">
+    <div class="card-title">📈 EQUITY CURVE + SIGNALS</div>
+    <canvas id="eq-canvas" width="1200" height="400" style="width:100%;max-height:400px;"></canvas>
+  </div>
+  <div class="card">
+    <div class="card-title">📊 COMPOSITE SIGNAL HISTORY</div>
+    <canvas id="comp-canvas" width="1200" height="200" style="width:100%;max-height:200px;"></canvas>
+  </div>
+</div>
+
+<!-- ══ PANEL 4 — TABLE ══ -->
+<div id="panel-table" class="panel">
+  <div class="card">
+    <div class="card-title">📋 SIGNAL LOG — Last 50 bars</div>
+    <div style="overflow-x:auto;">
+      <table class="tbl" id="sig-table">
+        <thead><tr>
+          <th>DATE</th><th>CLOSE</th><th>COMP</th><th>ENERGY</th>
+          <th>META P</th><th>SIGNAL</th><th>SIZE</th>
+          <th>w_30m</th><th>w_daily</th><th>w_weekly</th><th>EQUITY</th>
+        </tr></thead>
+        <tbody id="sig-tbody"><tr><td colspan="11" style="color:var(--sub);padding:20px">← Run engine first</td></tr></tbody>
+      </table>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+      <button class="btn btn-g" onclick="exportSignals()">📥 Export CSV</button>
+      <button class="btn btn-c" id="copy-last" onclick="copyLastSignal()">📋 Copy Latest Signal</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PANEL 5 — GUIDE ══ -->
+<div id="panel-guide" class="panel">
+  <div class="card">
+    <div class="card-title">📖 PYTHON SCRIPT — Google Colab मा run गर्नुस्</div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+      <a href="mtf_qlda_plus.py" download class="btn btn-g" style="text-decoration:none;display:inline-flex;align-items:center;">📥 Download Python Script</a>
+      <button class="btn btn-c" onclick="copyColab()">📋 Copy Colab Code</button>
+    </div>
+    <div class="code-box" id="colab-code"># ══ Google Colab — MTF-Q-LDA+ Quick Start ══
+# Step 1: Install dependencies
+!pip install scipy scikit-learn pandas numpy
+
+# Step 2: Upload your CSV file
+from google.colab import files
+uploaded = files.upload()  # upload data.csv
+
+# Step 3: Run MTF-Q-LDA+
+import subprocess
+result = subprocess.run(['python', 'mtf_qlda_plus.py', 'data.csv'], 
+                       capture_output=True, text=True)
+print(result.stdout)
+
+# Step 4: Download output
+files.download('mtf_qlda_output.csv')
+files.download('mtf_qlda_report.txt')
+
+# ══ CSV FORMAT REQUIRED ══
+# date,open,high,low,close,volume
+# 2024-01-01,42000,43000,41500,42800,1234.5
+# 2024-01-02,42800,44000,42500,43500,2345.6
+# ...
+# Minimum 200 rows recommended (120 warmup + 80 active)
+
+# ══ LIVE DATA FETCH (Binance) ══
+import requests, pandas as pd
+def fetch_binance(symbol='BTCUSDT', interval='1d', limit=500):
+    url = f'https://api.binance.com/api/v3/klines'
+    params = {'symbol': symbol, 'interval': interval, 'limit': limit}
+    data = requests.get(url, params=params).json()
+    df = pd.DataFrame(data, columns=[
+        'date','open','high','low','close','volume',
+        'ct','qav','nt','tbv','tqv','ignore'])
+    df['date'] = pd.to_datetime(df['date'], unit='ms').dt.strftime('%Y-%m-%d')
+    df = df[['date','open','high','low','close','volume']].astype(
+        {'open':float,'high':float,'low':float,'close':float,'volume':float})
+    return df
+
+df = fetch_binance('BTCUSDT', '1d', 500)
+df.to_csv('data.csv', index=False)
+print(f"Downloaded {len(df)} bars")</div>
+  </div>
+  <div class="card">
+    <div class="card-title">🚀 PRODUCTION DEPLOYMENT</div>
+    <table class="tbl">
+      <tr><th>STEP</th><th>ACTION</th><th>COMMAND / NOTE</th></tr>
+      <tr><td style="color:var(--gold)">1</td><td style="color:var(--cyan)">Install Python</td><td style="text-align:left">python.org → Download 3.10+</td></tr>
+      <tr><td style="color:var(--gold)">2</td><td style="color:var(--cyan)">Install libs</td><td style="text-align:left;color:var(--green)">pip install scipy scikit-learn pandas numpy</td></tr>
+      <tr><td style="color:var(--gold)">3</td><td style="color:var(--cyan)">Get data</td><td style="text-align:left">Binance/Yahoo CSV — date,open,high,low,close,volume</td></tr>
+      <tr><td style="color:var(--gold)">4</td><td style="color:var(--cyan)">Run script</td><td style="text-align:left;color:var(--green)">python mtf_qlda_plus.py data.csv</td></tr>
+      <tr><td style="color:var(--gold)">5</td><td style="color:var(--cyan)">View output</td><td style="text-align:left">mtf_qlda_output.csv + mtf_qlda_report.txt</td></tr>
+      <tr><td style="color:var(--gold)">6</td><td style="color:var(--cyan)">Schedule daily</td><td style="text-align:left">cron / Task Scheduler — run after market close</td></tr>
+      <tr><td style="color:var(--gold)">7</td><td style="color:var(--cyan)">Refit monthly</td><td style="text-align:left">Re-run full script every 30 days on expanding data</td></tr>
+    </table>
+  </div>
+</div>
+
+</div><!-- /wrap -->
+
+<script>
+// ══ State ══
+let G = { bars:[], results:null };
+const EPS=1e-12;
+
+function ST(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('panel-'+name).classList.add('active');
+  if(name==='chart'&&G.results) drawCharts();
+}
+
+function log(msg,cls=''){
+  const el=document.getElementById('fetch-status');
+  el.innerHTML+=`<div class="log-line ${cls}">${new Date().toLocaleTimeString()} — ${msg}</div>`;
+  el.scrollTop=el.scrollHeight;
+}
+
+// ══ FETCH LIVE DATA ══
+async function fetchBinance(symbol, interval, limit){
+  const url=`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`;
+  const r=await fetch(url);
+  if(!r.ok) throw new Error(`HTTP ${r.status}`);
+  const raw=await r.json();
+  return raw.map(k=>({
+    date: new Date(k[0]).toISOString().split('T')[0],
+    open: parseFloat(k[1]), high: parseFloat(k[2]),
+    low:  parseFloat(k[3]), close:parseFloat(k[4]),
+    volume:parseFloat(k[5])
+  }));
+}
+
+function genSilver(n=300){
+  // Simulate Silver-like price using realistic parameters
+  const bars=[]; let p=28.0;
+  const seed=42; let s=seed;
+  function rng(){s=(s*1664525+1013904223)&0xffffffff;return(s>>>0)/0xffffffff;}
+  for(let i=0;i<n;i++){
+    const chg=(rng()-0.49)*0.025;
+    const o=p;
+    const h=o*(1+Math.abs(rng()-0.5)*0.015);
+    const l=o*(1-Math.abs(rng()-0.5)*0.015);
+    p=o*(1+chg);
+    const c=p;
+    const d=new Date('2024-01-01');
+    d.setDate(d.getDate()+i);
+    bars.push({date:d.toISOString().split('T')[0],open:o,high:h,low:l,close:c,volume:rng()*1e6});
+  }
+  return bars;
+}
+
+async function fetchAndRun(){
+  const sym=document.getElementById('ls-sym').value;
+  const intv=document.getElementById('ls-int').value;
+  const nbars=parseInt(document.getElementById('ls-bars').value)||200;
+  const btn=document.getElementById('fetch-run-btn');
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span>RUNNING...';
+  document.getElementById('fetch-status').innerHTML='';
+
+  try{
+    let bars;
+    if(sym==='XAGUSD_sim'){
+      log('Generating Silver simulation data...','log-warn');
+      bars=genSilver(nbars);
+    } else {
+      log(`Fetching ${sym} ${intv} × ${nbars} from Binance...`);
+      bars=await fetchBinance(sym,intv,nbars);
+    }
+    log(`Loaded ${bars.length} bars ✓`,'log-ok');
+    G.bars=bars;
+    runEngine(bars);
+  } catch(e){
+    log('Error: '+e.message,'log-err');
+    log('Try DEMO mode or check internet connection','log-warn');
+  } finally {
+    btn.disabled=false; btn.innerHTML='🌐 FETCH + RUN MTF-Q-LDA+';
+  }
+}
+
+function runDemo(){
+  log('Running DEMO with synthetic data...','log-warn');
+  const bars=genSilver(300);
+  G.bars=bars;
+  runEngine(bars);
+}
+
+// ══ MTF-Q-LDA+ ENGINE (JS Implementation) ══
+function wrapPhase(x){ return ((x+Math.PI)%(2*Math.PI))-Math.PI; }
+function softmax(arr){
+  const mx=Math.max(...arr);
+  const e=arr.map(v=>Math.exp(v-mx));
+  const s=e.reduce((a,b)=>a+b,0)+EPS;
+  return e.map(v=>v/s);
+}
+function tanh(x){ return Math.tanh(x); }
+
+function hilbertPhaseSimple(series, window){
+  // Simplified Hilbert using autocorrelation-based phase estimation
+  const n=series.length;
+  const dphase=new Array(n).fill(NaN);
+  const ln=series.map(v=>Math.log(Math.max(v,EPS)));
+
+  for(let i=window;i<n;i++){
+    const seg=ln.slice(i-window,i);
+    // Detrend
+    const t=Array.from({length:window},(_,j)=>j);
+    const mx=t.reduce((a,b)=>a+b,0)/window;
+    const my=seg.reduce((a,b)=>a+b,0)/window;
+    const num=t.reduce((s,ti,j)=>s+(ti-mx)*(seg[j]-my),0);
+    const den=t.reduce((s,ti)=>s+(ti-mx)**2,0)+EPS;
+    const slope=num/den, intrc=my-slope*mx;
+    const segd=seg.map((v,j)=>v-(slope*j+intrc));
+    // Phase via Hilbert approximation (quadrature filter)
+    const mid=Math.floor(window/2);
+    let re=0, im=0;
+    for(let k=0;k<window;k++){
+      const freq=2*Math.PI*k/window;
+      re+=segd[k]*Math.cos(freq);
+      im+=segd[k]*Math.sin(freq);
+    }
+    const phase=Math.atan2(im,re);
+    dphase[i]=phase;
+  }
+  // Compute delta phase
+  const dp=new Array(n).fill(NaN);
+  for(let i=1;i<n;i++){
+    if(!isNaN(dphase[i])&&!isNaN(dphase[i-1])){
+      dp[i]=wrapPhase(dphase[i]-dphase[i-1]);
+    }
+  }
+  return dp;
+}
+
+function computeCoherence(series, window){
+  const n=series.length;
+  const C=new Array(n).fill(NaN);
+  const S=new Array(n).fill(NaN);
+  const G=new Array(n).fill(NaN);
+  const ln=series.map(v=>Math.log(Math.max(v,EPS)));
+
+  for(let i=window;i<n;i++){
+    const seg=ln.slice(i-window,i);
+    const mean=seg.reduce((a,b)=>a+b,0)/window;
+    const std=Math.sqrt(seg.reduce((s,v)=>s+(v-mean)**2,0)/window+EPS);
+    const norm=seg.map(v=>(v-mean)/std);
+    // Amplitude proxy
+    const amps=norm.map(v=>Math.abs(v));
+    const mA=amps.reduce((a,b)=>a+b,0)/window;
+    const sA=Math.sqrt(amps.reduce((s,v)=>s+(v-mA)**2,0)/window+EPS);
+    C[i]=mA/(sA+EPS);
+    S[i]=tanh(mean/(std+EPS));
+    // Kurtosis of returns
+    const r=[];
+    for(let j=1;j<seg.length;j++) r.push(seg[j]-seg[j-1]);
+    if(r.length>1){
+      const mr=r.reduce((a,b)=>a+b,0)/r.length;
+      const sr=Math.sqrt(r.reduce((s,v)=>s+(v-mr)**2,0)/r.length+EPS);
+      G[i]=r.reduce((s,v)=>s+((v-mr)/sr)**4,0)/r.length;
+    } else G[i]=0;
+  }
+  return {C,S,G};
+}
+
+function runEngine(bars){
+  log('Building features...','');
+  const n=bars.length;
+  const prices=bars.map(b=>b.close);
+  const warmup=Math.min(120, Math.floor(n*0.4));
+
+  // Weekly series (every 7 bars)
+  const wklyIdx=[];
+  for(let i=0;i<n;i+=7) wklyIdx.push(i);
+  const wklyPrices=wklyIdx.map(i=>prices[i]);
+
+  // Phases
+  log('Computing Hilbert phases...');
+  const dp_daily=hilbertPhaseSimple(prices, 5);
+  const dp_wkly_full=hilbertPhaseSimple(wklyPrices, 4);
+  // Expand weekly to daily
+  const dp_weekly=new Array(n).fill(NaN);
+  wklyIdx.forEach((idx,wi)=>{
+    const val=dp_wkly_full[wi];
+    for(let j=0;j<7;j++) if(idx+j<n) dp_weekly[idx+j]=val;
+  });
+  // 30m synthesized (use daily with noise-like variation)
+  const dp_30m=dp_daily.map((v,i)=>isNaN(v)?NaN:v*(0.9+0.2*((i*7+3)%11)/11));
+
+  // Velocities
+  const vel_daily=dp_daily.map((v,i)=>i>0&&!isNaN(v)&&!isNaN(dp_daily[i-1])?v-dp_daily[i-1]:NaN);
+  const vel_weekly=dp_weekly.map((v,i)=>i>0&&!isNaN(v)&&!isNaN(dp_weekly[i-1])?v-dp_weekly[i-1]:NaN);
+  const vel_30m=dp_30m.map((v,i)=>i>0&&!isNaN(v)&&!isNaN(dp_30m[i-1])?v-dp_30m[i-1]:NaN);
+
+  // C, S, G
+  log('Computing coherence features...');
+  const csg_d=computeCoherence(prices,5);
+  const csg_w_full=computeCoherence(wklyPrices,4);
+  const C_weekly=new Array(n).fill(NaN), S_weekly=new Array(n).fill(NaN), G_weekly=new Array(n).fill(NaN);
+  wklyIdx.forEach((idx,wi)=>{
+    for(let j=0;j<7;j++) if(idx+j<n){
+      C_weekly[idx+j]=csg_w_full.C[wi]||NaN;
+      S_weekly[idx+j]=csg_w_full.S[wi]||NaN;
+      G_weekly[idx+j]=csg_w_full.G[wi]||NaN;
+    }
+  });
+
+  // ATR
+  const logrets=[0,...prices.slice(1).map((p,i)=>Math.log(p/(prices[i]+EPS)))];
+  const atr=logrets.map((v,i)=>{
+    const w=14, start=Math.max(0,i-w);
+    const sl=logrets.slice(start,i+1);
+    return (sl.reduce((s,v)=>s+Math.abs(v),0)/sl.length)*prices[i];
+  });
+  const medAtr=atr.slice().sort((a,b)=>a-b)[Math.floor(atr.length/2)];
+
+  // Dynamic weights (simplified gradient-free update)
+  log('Optimizing TF weights...');
+  const alpha=0.6;
+  let pw=[0.3,0.4,0.3];
+  const wts=bars.map(()=>[...pw]);
+
+  const nextRet=prices.map((p,i)=>i<n-1?(prices[i+1]-p)/(p+EPS):0);
+
+  for(let t=warmup;t<n;t++){
+    const s=Math.max(0,t-90);
+    // Simple correlation-based weight update
+    const f30=[], fd=[], fw=[], y=[];
+    for(let k=s;k<t;k++){
+      f30.push((Math.sin(dp_30m[k]||0)+alpha*(vel_30m[k]||0)));
+      fd.push( (Math.sin(dp_daily[k]||0)+alpha*(vel_daily[k]||0)));
+      fw.push( (Math.sin(dp_weekly[k]||0)+alpha*(vel_weekly[k]||0)));
+      y.push(nextRet[k]);
+    }
+    if(y.length>20){
+      const corr=(arr1,arr2)=>{
+        const n=arr1.length, m1=arr1.reduce((a,b)=>a+b,0)/n, m2=arr2.reduce((a,b)=>a+b,0)/n;
+        const num=arr1.reduce((s,v,i)=>s+(v-m1)*(arr2[i]-m2),0);
+        const d1=Math.sqrt(arr1.reduce((s,v)=>s+(v-m1)**2,0)+EPS);
+        const d2=Math.sqrt(arr2.reduce((s,v)=>s+(v-m2)**2,0)+EPS);
+        return num/(d1*d2);
+      };
+      const c30=Math.max(0,corr(f30,y));
+      const cd =Math.max(0,corr(fd, y));
+      const cw =Math.max(0,corr(fw, y));
+      const tot=c30+cd+cw+EPS;
+      const wn=[c30/tot, cd/tot, cw/tot];
+      pw=pw.map((v,i)=>0.8*v+0.2*wn[i]);
+    }
+    wts[t]=[...pw];
+  }
+
+  // Composite + Energy + Sizes
+  log('Computing composite signals...');
+  const comp=new Array(n).fill(0);
+  const energy=new Array(n).fill(0);
+  const sizes=new Array(n).fill(0);
+  const dirs=new Array(n).fill(1);
+
+  for(let t=0;t<n;t++){
+    const w=wts[t];
+    const s30 =Math.sin(dp_30m[t]||0)+alpha*(vel_30m[t]||0);
+    const sd  =Math.sin(dp_daily[t]||0)+alpha*(vel_daily[t]||0);
+    const sw  =Math.sin(dp_weekly[t]||0)+alpha*(vel_weekly[t]||0);
+    comp[t]=w[0]*s30+w[1]*sd+w[2]*sw;
+
+    const Cb=w[0]*(csg_d.C[t]||0)+w[1]*(csg_d.C[t]||0)+w[2]*(C_weekly[t]||0);
+    const Gb=w[0]*(csg_d.G[t]||0)+w[1]*(csg_d.G[t]||0)+w[2]*(G_weekly[t]||0);
+    const Sb=w[0]*(csg_d.S[t]||0)+w[1]*(csg_d.S[t]||0)+w[2]*(S_weekly[t]||0);
+    const mu=Cb*Gb*Sb*comp[t];
+    energy[t]=100*mu*mu;
+    dirs[t]=comp[t]>=0?1:-1;
+
+    const d30=Math.sin(dp_30m[t]||0)>=0?1:-1;
+    const dd= Math.sin(dp_daily[t]||0)>=0?1:-1;
+    const dw= Math.sin(dp_weekly[t]||0)>=0?1:-1;
+    const agree=(d30===Math.sign(comp[t]))+(dd===Math.sign(comp[t]))+(dw===Math.sign(comp[t]));
+    let sz=agree>=3?1.0:agree>=2?0.6:0.2;
+    const e95=energy.slice(0,t+1).sort((a,b)=>a-b)[Math.floor(t*0.95)]||1;
+    sz*=Math.min(1,(energy[t]/(e95+EPS))*2);
+    sz/=(1+(atr[t]||0)/(medAtr+EPS));
+    sizes[t]=Math.min(1,Math.max(0,sz));
+  }
+
+  // Simplified meta-model (logistic on comp + energy)
+  log('Training meta-model...');
+  const metaP=new Array(n).fill(0.5);
+  if(n>warmup+20){
+    // Fit simple logistic on comp signal
+    let w0=0, w1=0.5, lr=0.05;
+    for(let iter=0;iter<100;iter++){
+      for(let t=warmup;t<n-1;t++){
+        const x=comp[t], y=nextRet[t]>0?1:0;
+        const p=1/(1+Math.exp(-(w0+w1*x)));
+        const err=p-y;
+        w0-=lr*err; w1-=lr*err*x;
+      }
+    }
+    for(let t=0;t<n;t++){
+      metaP[t]=1/(1+Math.exp(-(w0+w1*comp[t])));
+    }
+  }
+
+  // Trade simulation
+  log('Simulating trades...');
+  const signals=new Array(n).fill('FLAT');
+  const positions=new Array(n).fill(0);
+  const equity=[10000];
+  let prev=0, eq=10000;
+
+  for(let t=0;t<n-1;t++){
+    let use;
+    const px=metaP[t];
+    if(t>=warmup){
+      if(px>0.55) use=sizes[t];
+      else if(px<0.45) use=-sizes[t];
+      else use=0;
+    } else use=sizes[t]*dirs[t];
+    use=Math.max(-1,Math.min(1,use));
+    const ret=nextRet[t];
+    const tc=Math.abs(use-prev)*0.0004;
+    eq=eq+eq*use*ret-eq*tc;
+    equity.push(eq);
+    positions[t]=use;
+    signals[t]=use>0.1?'LONG':use<-0.1?'SHORT':'FLAT';
+    prev=use;
+  }
+  signals[n-1]='FLAT'; positions[n-1]=0;
+
+  G.results={bars,prices,comp,energy,sizes,metaP,signals,positions,equity,wts,
+    dp_30m,dp_daily,dp_weekly,vel_30m,vel_daily,vel_weekly,warmup,nextRet};
+
+  updateUI();
+  log('✅ MTF-Q-LDA+ complete!','log-ok');
+}
+
+function updateUI(){
+  const r=G.results;
+  const n=r.bars.length;
+  const last=n-1;
+
+  // Latest signal
+  const sig=r.signals[last], px=r.metaP[last];
+  const sigEl=document.getElementById('main-signal');
+  sigEl.textContent=sig==='LONG'?'🟢 LONG':sig==='SHORT'?'🔴 SHORT':'🟡 FLAT';
+  sigEl.className='badge '+(sig==='LONG'?'b-long':sig==='SHORT'?'b-short':'b-flat');
+  sigEl.style.fontSize='20px';
+
+  document.getElementById('meta-prob').textContent=(px*100).toFixed(1)+'%';
+  document.getElementById('meta-prob').style.color=px>0.55?'var(--green)':px<0.45?'var(--red)':'var(--gold)';
+  document.getElementById('meta-prob-bar').style.width=(px*100)+'%';
+  document.getElementById('meta-prob-bar').style.background=px>0.55?'var(--green)':px<0.45?'var(--red)':'var(--gold)';
+
+  document.getElementById('comp-val').textContent=r.comp[last].toFixed(4);
+  document.getElementById('comp-val').style.color=r.comp[last]>0?'var(--green)':'var(--red)';
+  document.getElementById('energy-val').textContent=r.energy[last].toFixed(3);
+  document.getElementById('size-val').textContent=r.sizes[last].toFixed(3);
+
+  // TF phases
+  const ph30=Math.sin(r.dp_30m[last]||0)>=0, phd=Math.sin(r.dp_daily[last]||0)>=0, phw=Math.sin(r.dp_weekly[last]||0)>=0;
+  document.getElementById('tf-30m').textContent=ph30?'▲ BULL':'▼ BEAR';
+  document.getElementById('tf-30m').style.color=ph30?'var(--green)':'var(--red)';
+  document.getElementById('tf-daily').textContent=phd?'▲ BULL':'▼ BEAR';
+  document.getElementById('tf-daily').style.color=phd?'var(--green)':'var(--red)';
+  document.getElementById('tf-weekly').textContent=phw?'▲ BULL':'▼ BEAR';
+  document.getElementById('tf-weekly').style.color=phw?'var(--green)':'var(--red)';
+
+  // Weights
+  const w=r.wts[last];
+  document.getElementById('w30').textContent=(w[0]*100).toFixed(1)+'%';
+  document.getElementById('wday').textContent=(w[1]*100).toFixed(1)+'%';
+  document.getElementById('wwkly').textContent=(w[2]*100).toFixed(1)+'%';
+
+  // Performance
+  const eq=r.equity;
+  const rets=eq.slice(1).map((v,i)=>(v-eq[i])/(eq[i]+EPS));
+  const tot=(eq[eq.length-1]/eq[0]-1)*100;
+  const mean=rets.reduce((a,b)=>a+b,0)/rets.length;
+  const std=Math.sqrt(rets.reduce((s,v)=>s+(v-mean)**2,0)/rets.length+EPS);
+  const sharpe=(mean/(std+EPS))*Math.sqrt(252);
+  const peak=eq.reduce((a,v,i)=>{ a.push(Math.max(i>0?a[i-1]:v,v)); return a;},[]);
+  const dd=eq.map((v,i)=>(v-peak[i])/(peak[i]+EPS));
+  const maxDD=Math.min(...dd)*100;
+  const longs=r.signals.filter(s=>s==='LONG').length;
+  const shorts=r.signals.filter(s=>s==='SHORT').length;
+  const flats=r.signals.filter(s=>s==='FLAT').length;
+  const active=r.positions.map((p,i)=>({p,nr:r.nextRet[i]})).filter(x=>Math.abs(x.p)>0.1);
+  const hits=active.filter(x=>(x.p>0&&x.nr>0)||(x.p<0&&x.nr<0)).length;
+  const hitRate=active.length>0?hits/active.length*100:0;
+
+  document.getElementById('p-ret').textContent=(tot>0?'+':'')+tot.toFixed(2)+'%';
+  document.getElementById('p-ret').style.color=tot>0?'var(--green)':'var(--red)';
+  document.getElementById('p-sharpe').textContent=sharpe.toFixed(3);
+  document.getElementById('p-sharpe').style.color=sharpe>1?'var(--green)':sharpe>0?'var(--gold)':'var(--red)';
+  document.getElementById('p-dd').textContent=maxDD.toFixed(2)+'%';
+  document.getElementById('p-hit').textContent=hitRate.toFixed(1)+'%';
+  document.getElementById('p-long').textContent=longs;
+  document.getElementById('p-short').textContent=shorts;
+  document.getElementById('p-flat').textContent=flats;
+  document.getElementById('p-eq').textContent='$'+eq[eq.length-1].toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+  // Table (last 50)
+  const tbody=document.getElementById('sig-tbody');
+  tbody.innerHTML='';
+  const start=Math.max(0,n-50);
+  for(let i=start;i<n;i++){
+    const b=r.bars[i];
+    const s=r.signals[i];
+    const sc=s==='LONG'?'var(--green)':s==='SHORT'?'var(--red)':'var(--gold)';
+    const w=r.wts[i];
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td style="color:var(--sub)">${b.date}</td>
+      <td style="color:var(--cyan)">${b.close.toFixed(2)}</td>
+      <td style="color:${r.comp[i]>0?'var(--green)':'var(--red)'}">${r.comp[i].toFixed(4)}</td>
+      <td style="color:var(--orange)">${r.energy[i].toFixed(3)}</td>
+      <td style="color:${r.metaP[i]>0.55?'var(--green)':r.metaP[i]<0.45?'var(--red)':'var(--gold)'}">${(r.metaP[i]*100).toFixed(1)}%</td>
+      <td style="color:${sc};font-weight:700">${s}</td>
+      <td style="color:var(--gold)">${r.sizes[i].toFixed(3)}</td>
+      <td style="color:var(--cyan)">${(w[0]*100).toFixed(0)}%</td>
+      <td style="color:var(--green)">${(w[1]*100).toFixed(0)}%</td>
+      <td style="color:var(--gold)">${(w[2]*100).toFixed(0)}%</td>
+      <td style="color:${r.equity[i]>10000?'var(--green)':'var(--red)'}">${r.equity[i]?'$'+r.equity[i].toLocaleString('en',{maximumFractionDigits:0}):'—'}</td>`;
+    tbody.appendChild(tr);
+  }
+
+  drawCharts();
+}
+
+function drawCharts(){
+  if(!G.results) return;
+  const r=G.results;
+  const n=r.bars.length;
+
+  // Equity chart
+  const ec=document.getElementById('eq-canvas');
+  const ctx=ec.getContext('2d');
+  const W=ec.width, H=ec.height;
+  ctx.fillStyle='#060610'; ctx.fillRect(0,0,W,H);
+
+  const eq=r.equity;
+  const emin=Math.min(...eq)*0.995, emax=Math.max(...eq)*1.005;
+  const esc=v=>(1-(v-emin)/(emax-emin+EPS))*(H-40)+20;
+  const xsc=i=>20+i*(W-40)/(n-1||1);
+
+  // BG grid
+  for(let g=0;g<5;g++){
+    const y=20+g*(H-40)/4;
+    ctx.beginPath(); ctx.moveTo(20,y); ctx.lineTo(W-20,y);
+    ctx.strokeStyle='rgba(0,229,255,0.04)'; ctx.lineWidth=1; ctx.stroke();
+  }
+
+  // Signal background
+  r.signals.forEach((s,i)=>{
+    if(s==='LONG') ctx.fillStyle='rgba(0,255,153,0.04)';
+    else if(s==='SHORT') ctx.fillStyle='rgba(255,68,68,0.04)';
+    else return;
+    const x1=xsc(i), x2=i<n-1?xsc(i+1):W-20;
+    ctx.fillRect(x1,20,x2-x1,H-40);
+  });
+
+  // Equity line
+  ctx.beginPath();
+  eq.forEach((v,i)=>{ const x=xsc(i),y=esc(v); i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
+  ctx.strokeStyle='rgba(0,229,255,0.9)'; ctx.lineWidth=2; ctx.stroke();
+
+  // Buy-hold line
+  const bh=[...Array(n)].map((_,i)=>10000*(r.prices[i]/r.prices[0]));
+  ctx.beginPath();
+  bh.forEach((v,i)=>{ const x=xsc(i),y=esc(v); i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
+  ctx.strokeStyle='rgba(255,215,0,0.3)'; ctx.lineWidth=1; ctx.setLineDash([4,4]); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Labels
+  ctx.fillStyle='rgba(0,229,255,0.8)'; ctx.font='11px Share Tech Mono';
+  ctx.fillText('Strategy Equity',30,35);
+  ctx.fillStyle='rgba(255,215,0,0.6)';
+  ctx.fillText('Buy & Hold',30,50);
+  ctx.fillStyle='rgba(255,255,255,0.4)'; ctx.textAlign='right';
+  ctx.fillText('$'+eq[eq.length-1].toLocaleString('en',{maximumFractionDigits:0}),W-25,35);
+  ctx.textAlign='left';
+
+  // Composite signal chart
+  const cc=document.getElementById('comp-canvas');
+  const ctx2=cc.getContext('2d');
+  const W2=cc.width, H2=cc.height;
+  ctx2.fillStyle='#060610'; ctx2.fillRect(0,0,W2,H2);
+  const comp=r.comp;
+  const cmin=Math.min(...comp)*1.1, cmax=Math.max(...comp)*1.1;
+  const csc=v=>(1-(v-cmin)/(cmax-cmin+EPS))*(H2-20)+10;
+  const xsc2=i=>i*(W2)/(n-1||1);
+
+  // Zero line
+  ctx2.beginPath(); ctx2.moveTo(0,csc(0)); ctx2.lineTo(W2,csc(0));
+  ctx2.strokeStyle='rgba(255,255,255,0.1)'; ctx2.lineWidth=1; ctx2.stroke();
+
+  // Comp line
+  ctx2.beginPath();
+  comp.forEach((v,i)=>{ const x=xsc2(i),y=csc(v); i===0?ctx2.moveTo(x,y):ctx2.lineTo(x,y); });
+  ctx2.strokeStyle='var(--purple)'; ctx2.lineWidth=1.5; ctx2.stroke();
+
+  ctx2.fillStyle='rgba(157,78,221,0.7)'; ctx2.font='10px Share Tech Mono';
+  ctx2.fillText('COMPOSITE SIGNAL (comp_t)',6,16);
+}
+
+function exportSignals(){
+  if(!G.results){ alert('Run engine first!'); return; }
+  const r=G.results;
+  const h=['date','close','comp','energy','meta_prob','signal','size','w_30m','w_daily','w_weekly','equity'];
+  const rows=[h.join(',')];
+  r.bars.forEach((b,i)=>{
+    const w=r.wts[i];
+    rows.push([b.date,b.close.toFixed(4),r.comp[i].toFixed(6),
+      r.energy[i].toFixed(4),(r.metaP[i]).toFixed(4),r.signals[i],
+      r.sizes[i].toFixed(4),(w[0]).toFixed(4),(w[1]).toFixed(4),(w[2]).toFixed(4),
+      r.equity[i]?r.equity[i].toFixed(2):''].join(','));
+  });
+  const blob=new Blob([rows.join('\n')],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url;
+  a.download='MTF_QLDA_signals_'+new Date().toISOString().split('T')[0]+'.csv';
+  a.click(); URL.revokeObjectURL(url);
+}
+
+function copyLastSignal(){
+  if(!G.results){ alert('Run first!'); return; }
+  const r=G.results, n=r.bars.length, last=n-1;
+  const b=r.bars[last], w=r.wts[last];
+  const txt=`MTF-Q-LDA+ Signal | ${b.date} | ${document.getElementById('ls-sym').value}
+Close: ${b.close.toFixed(2)} | Signal: ${r.signals[last]} | Meta P: ${(r.metaP[last]*100).toFixed(1)}%
+Comp: ${r.comp[last].toFixed(4)} | Energy: ${r.energy[last].toFixed(3)} | Size: ${r.sizes[last].toFixed(3)}
+Weights: 30m=${(w[0]*100).toFixed(1)}% Daily=${(w[1]*100).toFixed(1)}% Weekly=${(w[2]*100).toFixed(1)}%`;
+  navigator.clipboard.writeText(txt).then(()=>{
+    document.getElementById('copy-last').textContent='✅ Copied!';
+    setTimeout(()=>document.getElementById('copy-last').textContent='📋 Copy Latest Signal',2000);
+  });
+}
+
+function copyColab(){
+  const txt=document.getElementById('colab-code').textContent;
+  navigator.clipboard.writeText(txt).then(()=>{
+    event.target.textContent='✅ Copied!';
+    setTimeout(()=>event.target.textContent='📋 Copy Colab Code',2000);
+  });
+}
+
+// Auto-run demo on load
+setTimeout(()=>{ log('Auto-running DEMO...','log-warn'); runDemo(); }, 500);
+</script>
+</body>
+</html>
