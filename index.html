@@ -1063,24 +1063,30 @@ function update5mSignalTable(){
   if(!tbody||!G.res) return;
   const r=G.res,n=r.bars.length;
   tbody.innerHTML='';
-  // Show last 20 bars with signals
-  const start=Math.max(0,n-20);
-  for(let i=start;i<n;i++){
+  // Show last 50 bars, newest first, all signals (LONG/SHORT/FLAT)
+  const start=Math.max(0,n-50);
+  for(let i=n-1;i>=start;i--){
     const b=r.bars[i],s=r.sigs[i];
-    if(s==='FLAT') continue; // skip flat for cleaner table
-    const sc=s==='LONG'?'var(--gr)':'var(--re)';
-    const atr=r.atr5[i], sl=(b.close-r.sl_arr[i]).toFixed(3), tp=(b.close+r.tp_arr[i]).toFixed(3);
+    const sc=s==='LONG'?'var(--gr)':s==='SHORT'?'var(--re)':'var(--go)';
+    const atr=r.atr5[i]||0;
+    const slPrice=(b.close-r.sl_arr[i]).toFixed(3);
+    const tpPrice=(b.close+r.tp_arr[i]).toFixed(3);
+    const isLatest=i===n-1;
     const tr=document.createElement('tr');
+    if(isLatest) tr.style.background='rgba(91,45,176,0.07)';
     tr.innerHTML=`
-      <td style="color:var(--su)">${b.date} ${new Date(b.ts).toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit'})}</td>
+      <td style="color:var(--su)">${b.date} ${new Date(b.ts).toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit'})}${isLatest?' <span style="color:var(--ac);font-size:8px;">● LIVE</span>':''}</td>
       <td style="font-weight:700">${b.close.toFixed(3)}</td>
       <td style="color:${sc};font-weight:700">${s}</td>
       <td style="color:var(--or)">${atr.toFixed(4)}</td>
-      <td style="color:var(--re)">${sl}</td>
-      <td style="color:var(--gr)">${tp}</td>
+      <td style="color:var(--re)">${s!=='FLAT'?slPrice:'—'}</td>
+      <td style="color:var(--gr)">${s!=='FLAT'?tpPrice:'—'}</td>
       <td style="color:${r.mp[i]>.55?'var(--gr)':r.mp[i]<.45?'var(--re)':'var(--go)'}">${(r.mp[i]*100).toFixed(0)}%</td>
       <td style="color:${r.comp[i]>0?'var(--gr)':'var(--re)'}">${r.comp[i]>0?'↑':'↓'} ${r.s5[i]||'HOLD'}</td>`;
     tbody.appendChild(tr);
+  }
+  if(tbody.children.length===0){
+    tbody.innerHTML='<tr><td colspan="8" style="color:var(--su);padding:12px;text-align:center;">No signals yet — fetch data first</td></tr>';
   }
 }
 
