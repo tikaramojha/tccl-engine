@@ -990,14 +990,19 @@ function runEng(b5m,b30m,b1h,b4h,b1d,b1w,sym){
   }
 
   // ── Consensus (5 TFs) ──
+  // Pre-compute e95 once (sorted copy) for efficiency
+  const eneSorted=ene.slice().sort((a,b)=>a-b);
+  const e95global=eneSorted[Math.floor(n*.95)]||1;
   const dir=new Array(n).fill(1);
   for(let t=0;t<n;t++){
     dir[t]=comp[t]>=0?1:-1;
     const agree=[dp5,dp30,dp1h,dp4h,dp1d_e].filter(dp=>Math.sin(dp[t]||0)>=0===comp[t]>=0).length;
-    let s=agree>=5?1.0:agree>=4?.80:agree>=3?.60:agree>=2?.35:.15;
-    const e95=ene.slice(0,t+1).sort((a,b)=>a-b)[Math.floor(t*.95)]||1;
-    s*=Math.min(1,(ene[t]/(e95+EPS))*2);
-    sz[t]=Math.min(sz[t]*s,1.0);
+    // Agreement scalar: minimum 0.4 so signal is never fully suppressed
+    let s=agree>=5?1.0:agree>=4?.85:agree>=3?.70:agree>=2?.50:.40;
+    // Energy scalar: use global percentile, floor at 0.3 so early bars still fire
+    const eScale=Math.max(0.3, Math.min(1,(ene[t]/(e95global+EPS))*1.5));
+    s*=eScale;
+    sz[t]=Math.min(Math.max(sz[t]*s, 0.08), 1.0); // floor 8% so signal clears FLAT threshold
   }
 
   // ── Meta-model P(UP) — enhanced logistic ──
@@ -1028,7 +1033,7 @@ function runEng(b5m,b30m,b1h,b4h,b1d,b1w,sym){
     u=Math.max(-1,Math.min(1,u));
     e=e+e*u*nr[t]-e*Math.abs(u-prev)*.0004;
     eq.push(e);pos[t]=u;
-    sigs[t]=u>.05?'LONG':u<-.05?'SHORT':'FLAT';prev=u;
+    sigs[t]=u>.02?'LONG':u<-.02?'SHORT':'FLAT';prev=u;
   }
   sigs[n-1]='FLAT';pos[n-1]=0;eq.push(e);
 
