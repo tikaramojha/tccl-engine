@@ -645,9 +645,9 @@ async function refreshPrices(){
   [['tgold','tgold2','$'+gp],['tsilv','tsilv2','$'+sp],['tnepse','tnepse2',np+' pts']].forEach(([id1,id2,txt])=>{
     [id1,id2].forEach(id=>{const el=document.getElementById(id);if(el){el.textContent=txt;el.style.color='#ffcc44';}});
   });
-  document.getElementById('mcp-G').textContent='$'+gp;
-  document.getElementById('mcp-Si').textContent='$'+sp;
-  document.getElementById('mcp-NP').textContent=np;
+  const _mpG=document.getElementById('mp-G');if(_mpG)_mpG.textContent='$'+gp;
+  const _mpSi=document.getElementById('mp-Si');if(_mpSi)_mpSi.textContent='$'+sp;
+  const _mpNP=document.getElementById('mp-NP');if(_mpNP)_mpNP.textContent=np;
   document.getElementById('nepse-val').textContent=np;
 }
 
