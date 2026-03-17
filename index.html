@@ -1144,7 +1144,7 @@ function updateUI(){
   // Update labels
   ['w_5m','w_30m','w_1H'].forEach((lbl,i)=>{
     const labels=['w_5m','w_30m','w_1H'];
-    try{['w30','wd','ww'][i]&&document.getElementById(['w30','wd','ww'][i]).closest('.sb').querySelector('.sl').textContent=labels[i];}catch(e){}
+    try{const _el=['w30','wd','ww'][i]?document.getElementById(['w30','wd','ww'][i]):null;if(_el){const _sl=_el.closest('.sb')?.querySelector('.sl');if(_sl)_sl.textContent=labels[i];}}catch(e){}
   });
 
   // TCCL breakdown box
