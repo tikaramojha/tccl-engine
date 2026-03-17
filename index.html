@@ -1133,7 +1133,7 @@ function updateUI(){
     const up=Math.sin(dp||0)>=0;
     el.textContent=up?'▲ BULL':'▼ BEAR';
     el.style.color=up?'var(--gr)':'var(--re)';
-    el.closest('.sb')?.querySelector('.sl')?.textContent && (el.closest('.sb').querySelector('.sl').textContent=lbl+' PHASE');
+     const _phsl=el.closest('.sb')?.querySelector('.sl');if(_phsl) _phsl.textContent=lbl+' PHASE';
   });
 
   // Weights (now 5)
@@ -1310,7 +1310,7 @@ function renderBriefs(sym,prices,sentiment){
     return`<div style="background:var(--bg3);border:1px solid var(--bd);border-radius:6px;padding:10px;display:flex;gap:10px;align-items:center;">
       <div style="font-family:Orbitron,monospace;font-size:11px;color:var(--ac);font-weight:700;min-width:55px;">${a.s}</div>
       <div style="flex:1;"><div style="font-family:Share Tech Mono,monospace;font-size:14px;font-weight:700;">${pStr}</div>
-      <div style="font-size:12px;color:var(--su);margin-top:2px;">${sentiment.overall==='BULLISH'?'Momentum positive':'sentiment.overall'==='BEARISH'?'Selling pressure':'Consolidating'}</div></div>
+      <div style="font-size:12px;color:var(--su);margin-top:2px;">${sentiment.overall==='BULLISH'?'Momentum positive':sentiment.overall==='BEARISH'?'Selling pressure':'Consolidating'}</div></div>
       <div style="font-size:20px;">${sentiment.overall==='BULLISH'?'📈':sentiment.overall==='BEARISH'?'📉':'➡️'}</div></div>`;
   }).join('');
 }
