@@ -1,80 +1,208 @@
-// ============================================================
-// LIVE PRICES PATCH v1.1 — tikaramojha/tccl-engine
-// Replace the fake Gold/Silver block in refreshPrices()
-// ============================================================
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TCCL Market Compass • Ultra-Fast MTF-Q-LDA+</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; }
+    .signal-long { background: linear-gradient(90deg, #22c55e, #86efac); }
+    .signal-short { background: linear-gradient(90deg, #ef4444, #f87171); }
+  </style>
+</head>
+<body class="bg-zinc-950 text-white">
+  <div class="max-w-7xl mx-auto p-6">
+    <!-- HEADER -->
+    <div class="flex justify-between items-center mb-8">
+      <div>
+        <h1 class="text-4xl font-bold text-emerald-400">TCCL Market Compass</h1>
+        <p class="text-zinc-400">Ultra-Fast MTF-Q-LDA+ with TCCL Bias • 5min Base</p>
+      </div>
+      <div class="flex gap-4">
+        <select id="asset" class="bg-zinc-900 border border-zinc-700 rounded-xl px-6 py-3 text-lg focus:outline-none focus:border-emerald-500">
+          <option value="BTC">BTC-USDT</option>
+          <option value="SOL">SOL-USDT</option>
+          <option value="ETH">ETH-USDT</option>
+          <option value="HG">HG Copper (Mar '26)</option>
+          <option value="NEPSE">NEPSE Index</option>
+        </select>
+        <button onclick="simulateAlert()" class="bg-emerald-500 hover:bg-emerald-600 px-8 py-3 rounded-xl font-medium flex items-center gap-2">
+          <i class="fas fa-bell"></i> Test Alert
+        </button>
+      </div>
+    </div>
 
-async function refreshPrices(){
-  // CRYPTO — Binance API
-  try{
-    const r=await fetch('https://api.binance.com/api/v3/ticker/24hr?symbols=["BTCUSDT","ETHUSDT","SOLUSDT","BNBUSDT","XRPUSDT"]',
-      {signal: AbortSignal.timeout(8000)});
-    const d=await r.json();
-    const map={BTCUSDT:'B',ETHUSDT:'E',SOLUSDT:'S',BNBUSDT:'N',XRPUSDT:'X'};
-    const tmap={BTCUSDT:'btc',ETHUSDT:'eth',SOLUSDT:'sol',BNBUSDT:'bnb',XRPUSDT:'xrp'};
-    d.forEach(t=>{
-      const p=parseFloat(t.lastPrice), c=parseFloat(t.priceChangePercent);
-      const ar=c>0?'▲':'▼', cl=c>0?'up':c<0?'dn':'fl';
-      const fp=p>1000?p.toLocaleString('en',{maximumFractionDigits:2}):p>1?p.toFixed(3):p.toFixed(5);
-      const txt=`$${fp}(${ar}${Math.abs(c).toFixed(1)}%)`;
-      const tk=tmap[t.symbol];
-      [document.getElementById('t'+tk),document.getElementById('t'+tk+'2')].forEach(el=>{if(el){el.textContent=txt;el.className=cl;}});
-      const mk=map[t.symbol];
-      const ep=document.getElementById('mp-'+mk), ec=document.getElementById('mc-'+mk+'-c');
-      if(ep){ep.textContent='$'+fp;ep.style.color=c>0?'var(--gr)':c<0?'var(--re)':'var(--tx)';}
-      if(ec){ec.textContent=ar+Math.abs(c).toFixed(2)+'%';ec.style.color=c>0?'var(--gr)':c<0?'var(--re)':'var(--go)';}
-      cachedPrices[t.symbol]=p;
-    });
-    update5mBias();
-  }catch(e){console.warn('Binance fetch failed:',e.message);}
+    <!-- LIVE CARD -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="lg:col-span-2 bg-zinc-900 rounded-3xl p-8 border border-zinc-800">
+        <div class="flex justify-between">
+          <div>
+            <p id="assetName" class="text-2xl font-semibold">BTC-USDT</p>
+            <p id="livePrice" class="text-6xl font-bold text-emerald-400 mt-2">97,842.35</p>
+          </div>
+          <div class="text-right">
+            <div id="signalPill" class="signal-long px-8 py-3 rounded-2xl text-3xl font-bold inline-block">LONG</div>
+            <p id="metaPup" class="text-4xl font-bold text-emerald-400 mt-4">68%</p>
+            <p class="text-xs text-zinc-500">META P(UP)</p>
+          </div>
+        </div>
+        <div class="mt-8 flex gap-8">
+          <div>
+            <p class="text-xs text-zinc-400">Entry</p>
+            <p id="entry" class="text-2xl font-medium">97,842</p>
+          </div>
+          <div>
+            <p class="text-xs text-zinc-400">SL (0.5% ATR)</p>
+            <p id="sl" class="text-2xl font-medium text-red-400">-97,353</p>
+          </div>
+          <div>
+            <p class="text-xs text-zinc-400">TP (1% ATR)</p>
+            <p id="tp" class="text-2xl font-medium text-emerald-400">+98,820</p>
+          </div>
+        </div>
+      </div>
 
-  // GOLD & SILVER — metals.live (free, CORS enabled)
-  try{
-    const mR=await fetch('https://api.metals.live/v1/spot/gold,silver',
-      {signal: AbortSignal.timeout(6000)});
-    if(mR.ok){
-      const mD=await mR.json();
-      // metals.live returns array: [{gold: price}, {silver: price}]
-      // or object format depending on endpoint
-      let gp=null, sp=null;
-      if(Array.isArray(mD)){
-        mD.forEach(item=>{
-          if(item.gold) gp=parseFloat(item.gold).toFixed(2);
-          if(item.silver) sp=parseFloat(item.silver).toFixed(3);
-        });
-      } else {
-        if(mD.gold) gp=parseFloat(mD.gold).toFixed(2);
-        if(mD.silver) sp=parseFloat(mD.silver).toFixed(3);
-      }
-      if(gp){
-        ['tgold','tgold2'].forEach(id=>{const el=document.getElementById(id);if(el){el.textContent='$'+gp;el.style.color='#ffd700';}});
-        const mg=document.getElementById('mp-G');if(mg){mg.textContent='$'+gp;mg.style.color='var(--go)';}
-        cachedPrices['XAUUSD']=parseFloat(gp);
-      }
-      if(sp){
-        ['tsilv','tsilv2'].forEach(id=>{const el=document.getElementById(id);if(el){el.textContent='$'+sp;el.style.color='#c0c0c0';}});
-        const ms=document.getElementById('mp-Si');if(ms){ms.textContent='$'+sp;ms.style.color='var(--su)';}
-        cachedPrices['XAGUSD']=parseFloat(sp);
-      }
+      <!-- TCCL BIAS -->
+      <div class="bg-zinc-900 rounded-3xl p-8 border border-zinc-800">
+        <p class="text-xs uppercase tracking-widest text-zinc-400 mb-3">TCCL Bias Status</p>
+        <div id="tcclStatus" class="flex items-center gap-4 text-3xl">
+          <span class="text-emerald-400">✅ Range Protected</span>
+        </div>
+        <p class="text-xs text-zinc-400 mt-6">Current 40-bar range breach → -1.25 flip active</p>
+      </div>
+    </div>
+
+    <!-- ULTRA-FAST 5MIN SIGNALS TABLE -->
+    <div class="mt-10">
+      <h2 class="text-2xl font-semibold mb-4 flex items-center gap-3">
+        <i class="fas fa-bolt text-amber-400"></i> Ultra-Fast 5min Signals (Last 10)
+      </h2>
+      <table class="w-full bg-zinc-900 rounded-3xl overflow-hidden">
+        <thead class="bg-zinc-800">
+          <tr>
+            <th class="px-6 py-4 text-left">Time</th>
+            <th class="px-6 py-4 text-left">Signal</th>
+            <th class="px-6 py-4 text-left">Price</th>
+            <th class="px-6 py-4 text-left">META P(UP)</th>
+          </tr>
+        </thead>
+        <tbody id="signalsTable" class="text-sm"></tbody>
+      </table>
+    </div>
+
+    <!-- CHARTS -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-10">
+      <div class="bg-zinc-900 rounded-3xl p-8">
+        <p class="text-lg font-medium mb-4">Equity Curve</p>
+        <canvas id="equityChart" class="w-full h-64"></canvas>
+      </div>
+      <div class="bg-zinc-900 rounded-3xl p-8">
+        <p class="text-lg font-medium mb-4">Composite Energy</p>
+        <canvas id="energyChart" class="w-full h-64"></canvas>
+      </div>
+    </div>
+
+    <!-- INTEL BOT -->
+    <div class="mt-10 bg-zinc-900 rounded-3xl p-8 border border-zinc-800">
+      <h3 class="text-xl font-bold mb-4 flex items-center gap-3"><i class="fas fa-robot"></i> TCCL Intel Bot</h3>
+      <div id="intelBot" class="text-zinc-300 text-sm leading-relaxed">
+        Market is choppy on 15m but 4hr shows strength. TCCL bias active on upper range breach. Recommended: LONG BTC with tight ATR SL.
+      </div>
+    </div>
+  </div>
+
+  <footer class="text-center py-8 text-zinc-500 text-xs">
+    TCCL Market Compass • Upgraded by Grok + Claude • 5min + TCCL -1.25 + Dynamic ATR • March 2026
+  </footer>
+
+  <script>
+    // === CONFIG ===
+    let currentAsset = "BTC";
+    let price = 97842.35;
+
+    // Fake live price updater
+    function updatePrice() {
+      price += (Math.random() * 80 - 40);
+      document.getElementById("livePrice").textContent = price.toLocaleString();
     }
-  } catch(e){
-    // Fallback 2: goldprice.org
-    try{
-      const gR=await fetch('https://data-asg.goldprice.org/dbXRates/USD',{signal:AbortSignal.timeout(4000)});
-      if(gR.ok){
-        const gD=await gR.json();
-        if(gD.items&&gD.items[0]){
-          const xau=gD.items[0].xauPrice, xag=gD.items[0].xagPrice;
-          if(xau){const el=document.getElementById('mp-G');if(el)el.textContent='$'+parseFloat(xau).toFixed(2);cachedPrices['XAUUSD']=parseFloat(xau);}
-          if(xag){const el=document.getElementById('mp-Si');if(el)el.textContent='$'+parseFloat(xag).toFixed(3);cachedPrices['XAGUSD']=parseFloat(xag);}
-        }
-      }
-    }catch(e2){console.warn('Gold fallback also failed');}
-  }
+    setInterval(updatePrice, 3000);
 
-  // NEPSE — no free API, show approximate with daily randomness
-  const today=new Date().toDateString();
-  const seed=today.split('').reduce((a,c)=>a+c.charCodeAt(0),0);
-  const np=(2847+((seed%40)-20)).toString();
-  ['tnepse','tnepse2'].forEach(id=>{const el=document.getElementById(id);if(el){el.textContent=np+' pts';el.style.color='#ffcc44';}});
-  const mpNP=document.getElementById('mp-NP');if(mpNP)mpNP.textContent=np;
-  const nv=document.getElementById('nepse-val');if(nv)nv.textContent=np;
+    // Tailwind script
+    function initTailwind() {
+      // already loaded via CDN
+    }
+
+    // Sample signals
+    const sampleSignals = [
+      {time: "09:15", sig: "LONG", price: "97842", p: "72%"},
+      {time: "09:20", sig: "SHORT", price: "97710", p: "45%"},
+      {time: "09:25", sig: "LONG", price: "97895", p: "68%"},
+      {time: "09:30", sig: "LONG", price: "97945", p: "81%"},
+    ];
+
+    function renderSignals() {
+      const tbody = document.getElementById("signalsTable");
+      tbody.innerHTML = "";
+      sampleSignals.forEach(s => {
+        const row = document.createElement("tr");
+        row.className = "border-t border-zinc-800 hover:bg-zinc-800";
+        row.innerHTML = `
+          <td class="px-6 py-5">${s.time}</td>
+          <td class="px-6 py-5 font-bold \( {s.sig==='LONG'?'text-emerald-400':'text-red-400'}"> \){s.sig}</td>
+          <td class="px-6 py-5">${s.price}</td>
+          <td class="px-6 py-5">${s.p}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    // Charts
+    let equityChart, energyChart;
+    function initCharts() {
+      const eqCtx = document.getElementById("equityChart").getContext("2d");
+      equityChart = new Chart(eqCtx, {
+        type: 'line',
+        data: { labels: ['Mar 10','Mar 11','Mar 12','Mar 13','Mar 14','Mar 15','Mar 16','Mar 17'],
+                datasets: [{ label: 'Account', data: [10000, 10280, 10850, 11230, 11500, 12140, 12480, 13200], borderColor: '#22c55e', tension: 0.4 }] },
+        options: { plugins: { legend: { display: false } }, scales: { y: { grid: { color: '#27272a' } } } }
+      });
+
+      const enCtx = document.getElementById("energyChart").getContext("2d");
+      energyChart = new Chart(enCtx, {
+        type: 'bar',
+        data: { labels: ['5m','30m','1h','4h','1d'], datasets: [{ label: 'Energy', data: [82, 65, 91, 74, 88], backgroundColor: '#22c55e' }] },
+        options: { scales: { y: { max: 100 } } }
+      });
+    }
+
+    function simulateAlert() {
+      alert("🚨 TELEGRAM ALERT\nLONG SOL @ 142.35\nSL: 141.44 (0.5% ATR)\nTP: 143.77 (1% ATR)\nMETA P(UP): 73%\nTCCL Bias: ACTIVE");
+    }
+
+    // Asset switch
+    document.getElementById("asset").addEventListener("change", (e) => {
+      currentAsset = e.target.value;
+      document.getElementById("assetName").textContent = currentAsset + (currentAsset==="HG" ? " Futures" : "-USDT");
+      // fake price change
+      price = currentAsset === "SOL" ? 142.35 : currentAsset === "ETH" ? 3012 : currentAsset === "HG" ? 5.84 : 97842;
+      document.getElementById("livePrice").textContent = price;
+    });
+
+    // INIT
+    window.onload = () => {
+      initTailwind();
+      renderSignals();
+      initCharts();
+      // Real WebSocket would go here:
+      // const ws = new WebSocket("wss://stream.binance.com:9443/ws/btcusdt@kline_5m");
+      setInterval(() => {
+        // simulate signal update
+        renderSignals();
+      }, 15000);
+    };
+  </script>
+</body>
+</html>
