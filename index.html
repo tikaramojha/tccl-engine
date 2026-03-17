@@ -233,11 +233,11 @@ a{color:var(--cy);}
         </select>
       </div>
       <div class="ig">
-        <label class="lbl">30m BARS TO FETCH</label>
+        <label class="lbl">5m BARS TO FETCH (max 1500)</label>
         <select class="inp" id="bars">
-          <option value="500">500 bars (~10 days)</option>
-          <option value="1000" selected>1000 bars (~20 days)</option>
-          <option value="1500">1500 bars (~31 days)</option>
+          <option value="500">500 bars (~1.7 days)</option>
+          <option value="1000">1000 bars (~3.5 days)</option>
+          <option value="1500" selected>1500 bars (~5 days) ★ Recommended</option>
         </select>
       </div>
       <div style="display:flex;gap:8px;margin-top:6px;">
@@ -886,7 +886,7 @@ function runEng(b5m,b30m,b1h,b4h,b1d,b1w,sym){
   lg('MTF-Q-LDA+ v2 — 5-TF Engine starting...');
   const n=b5m.length;
   const p5=b5m.map(b=>b.close);
-  const wu=Math.min(300,Math.floor(n*.15));
+  const wu=Math.min(100,Math.floor(n*.10));
 
   // ── TCCL signals per TF ──
   lg('TCCL signals (5m,30m,1H,4H,1D)...');
@@ -1026,7 +1026,7 @@ function runEng(b5m,b30m,b1h,b4h,b1d,b1w,sym){
     const px=mp[t],d1d_now=s1d_e[t]||'HOLD';
     let u;
     if(t>=wu){
-      u=px>.55?sz[t]:px<.45?-sz[t]:0;
+      u=px>.52?sz[t]:px<.48?-sz[t]:0;
       if(d1d_now==='SELL'&&u>0) u=0;
       if(d1d_now==='BUY'&&u<0) u=0;
     } else u=sz[t]*dir[t];
@@ -1086,7 +1086,7 @@ function update5mSignalTable(){
       <td style="color:var(--or)">${atr.toFixed(4)}</td>
       <td style="color:var(--re)">${s!=='FLAT'?slPrice:'—'}</td>
       <td style="color:var(--gr)">${s!=='FLAT'?tpPrice:'—'}</td>
-      <td style="color:${r.mp[i]>.55?'var(--gr)':r.mp[i]<.45?'var(--re)':'var(--go)'}">${(r.mp[i]*100).toFixed(0)}%</td>
+      <td style="color:${r.mp[i]>.52?'var(--gr)':r.mp[i]<.48?'var(--re)':'var(--go)'}">${(r.mp[i]*100).toFixed(0)}%</td>
       <td style="color:${r.comp[i]>0?'var(--gr)':'var(--re)'}">${r.comp[i]>0?'↑':'↓'} ${r.s5[i]||'HOLD'}</td>`;
     tbody.appendChild(tr);
   }
@@ -1123,9 +1123,9 @@ function updateUI(){
   se.className='badge '+(sig==='LONG'?'bL':sig==='SHORT'?'bS':'bF');
 
   document.getElementById('rmp').textContent=(px*100).toFixed(1)+'%';
-  document.getElementById('rmp').style.color=px>.55?'var(--gr)':px<.45?'var(--re)':'var(--go)';
+  document.getElementById('rmp').style.color=px>.52?'var(--gr)':px<.48?'var(--re)':'var(--go)';
   document.getElementById('rmpb').style.width=(px*100)+'%';
-  document.getElementById('rmpb').style.background=px>.55?'var(--gr)':px<.45?'var(--re)':'var(--go)';
+  document.getElementById('rmpb').style.background=px>.52?'var(--gr)':px<.48?'var(--re)':'var(--go)';
   document.getElementById('rcomp').textContent=r.comp[L].toFixed(4);
   document.getElementById('rcomp').style.color=r.comp[L]>0?'var(--gr)':'var(--re)';
   document.getElementById('rene').textContent=r.ene[L].toFixed(2);
@@ -1217,7 +1217,7 @@ function updateUI(){
       <td style="font-weight:700">${b.close.toFixed(3)}</td>
       <td style="color:${r.comp[i]>0?'var(--gr)':'var(--re)'}">${r.comp[i].toFixed(4)}</td>
       <td style="color:var(--or)">${r.ene[i].toFixed(2)}</td>
-      <td style="color:${r.mp[i]>.55?'var(--gr)':r.mp[i]<.45?'var(--re)':'var(--go)'}">${(r.mp[i]*100).toFixed(0)}%</td>
+      <td style="color:${r.mp[i]>.52?'var(--gr)':r.mp[i]<.48?'var(--re)':'var(--go)'}">${(r.mp[i]*100).toFixed(0)}%</td>
       <td style="color:${sc};font-weight:700">${s}</td>
       <td>${(r.sz[i]*100).toFixed(0)}%</td>
       <td style="color:var(--cy)">${(w[0]*100).toFixed(0)}%</td>
